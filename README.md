@@ -1,3 +1,43 @@
+# Material Security Takehome Interview: In-Memory Filesystem
+> # Prompt
+>Build an in-memory filesystem! This is a simplified file system that supports both files and directories. You don’t have to work with any actual files, everything will just be contained in-memory.
+>
+>Write functions that correspond to familiar file system commands. We only care about the capabilities, so you may choose to combine multiple capabilities into one function, or even split up one capability amongst multiple functions (up to you). You can leave comments and TODOs if there are ideas or issues you want to discuss or point out, but don’t have time to implement/fix, or aren’t quite sure how.
+
+## Structural requirements
+- [x] Choose a language of your choice (excluding bash, haskell, or scala). __Java selected.__
+- [] Feel free to use small libraries where appropriate instead of re-inventing the wheel. 
+- [] Feel free to look things up or use other reference material as you would when working
+normally
+- [] Please make this look as close to real production code you would submit for code review
+(e.g feel free to refactor aggressively, use helper functions, etc)
+- [x] Submit your code via github. __https://github.com/ZekeAranyLucas/material-takehome__
+- [] Please include a README that includes how to get your
+code running / tested.
+## Functional requirements
+- [] Change the current working directory. The working directory begins at '/'. You may traverse to a child directory or the parent.
+- [] Get the current working directory. Returns the current working directory's path from the root to console. Example: ‘/school/homework’
+- [] Create a new directory. The current working directory is the parent.
+- [] Get the directory contents: Returns the children of the current working directory.
+Example: [‘math’, ‘history’, ‘spanish’]
+- [] Remove a directory. The target directory must be among the current working directory’s
+children.
+- [] Create a new file: Creates a new empty file in the current working directory.
+- [] Write file contents: Writes the specified contents to a file in the current working
+directory. All file contents will fit into memory.
+- [] Get file contents: Returns the content of a file in the current working directory.
+- [] Move a file: Move an existing file in the current working directory to a new location (in
+the same directory).
+- [] Find a file/directory: Given a filename, find all the files and directories within the current
+working directory that have exactly that name.
+
+## Decision records
+
+### Use Codespaces
+This is an opportunity to experiment. The hypothesis is that Codespaces will it easier to share the code and execution environment with reviewers at Material, so that it's less effort to dig in and evaluate the specifics of the project.
+
+
+
 # Try Out Development Containers: Java
 
 [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode-remote-try-java)
