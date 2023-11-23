@@ -1,0 +1,3 @@
+# ImfsProvider is a FileSystemProvider for the "imfs:" protocol
+
+com.imfs.ImfsProvider

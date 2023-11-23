@@ -61,6 +61,9 @@ State like the working directory is relative to the caller and not global to the
 this state is better kept explicitly under the caller's control instead of process global (like env vars)
 or thread local, so that we avoid future problems with multiple simultaneous calllers.
 
+NOTE: Java's working dir for the default file system is not fully mutable,
+so would clearly not meet the requirements of this exercise.
+
 # TODO : slim down devcontainers stuff
 
 # Try Out Development Containers: Java
