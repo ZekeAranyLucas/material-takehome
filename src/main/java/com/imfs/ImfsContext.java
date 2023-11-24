@@ -5,6 +5,8 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,6 +67,11 @@ public class ImfsContext {
 
     public void mkfile(String string) throws IOException {
         Files.createFile(this.path.resolve(string));
+    }
+
+    public void write(String string, String[] lines) throws IOException {
+        Path file = this.path.resolve(string);
+        Files.write(file, Arrays.asList(lines), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
     }
 
 }

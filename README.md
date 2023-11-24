@@ -28,8 +28,8 @@
 - [x] Remove a directory. The target directory must be among the current working directory’s
       children.
 - [x] Create a new file: Creates a new empty file in the current working directory.
-- [] Write file contents: Writes the specified contents to a file in the current working
-  directory. All file contents will fit into memory.
+- [x] Write file contents: Writes the specified contents to a file in the current working
+      directory. All file contents will fit into memory.
 - [] Get file contents: Returns the content of a file in the current working directory.
 - [] Move a file: Move an existing file in the current working directory to a new location (in
   the same directory).

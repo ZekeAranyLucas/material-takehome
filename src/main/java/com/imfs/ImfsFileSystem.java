@@ -148,4 +148,8 @@ public class ImfsFileSystem extends FileSystem {
     public long getSize(String kid) {
         return blobs.get(kid).length;
     }
+
+    public byte[] getBlob(String kid) {
+        return blobs.get(kid);
+    }
 }
