@@ -144,6 +144,22 @@ public class ImfsContextTest {
         var fileSystem = (ImfsFileSystem) path.getFileSystem();
         var blob = fileSystem.getBlob("fun.txt");
         assertArrayEquals(new byte[] { 'h', 'e', 'l', 'l', 'o', '\n', 'w', 'o', 'r', 'l', 'd', '\n' }, blob);
-
     }
+
+    @Test
+    public void testReadLines() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+
+        context.write("fun.txt", new String[] { "hello", "world", "again" });
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish", "fun.txt" }, kids.toArray());
+        var fun = Paths.get(URI.create("imfs://ImfsContextTest/fun.txt"));
+        assertEquals(false, Files.isDirectory(fun));
+
+        var lines = context.readLines("fun.txt");
+        assertArrayEquals(new String[] { "hello", "world", "again" }, lines.toArray());
+    }
+
 }

@@ -30,7 +30,7 @@
 - [x] Create a new file: Creates a new empty file in the current working directory.
 - [x] Write file contents: Writes the specified contents to a file in the current working
       directory. All file contents will fit into memory.
-- [] Get file contents: Returns the content of a file in the current working directory.
+- [x] Get file contents: Returns the content of a file in the current working directory.
 - [] Move a file: Move an existing file in the current working directory to a new location (in
   the same directory).
 - [] Find a file/directory: Given a filename, find all the files and directories within the current
@@ -81,6 +81,13 @@ The first alternative is "\*Test" namespaces will start with children: [â€˜mathâ
 
 Developer testing can include all kinds of test variations. Hypothesis is that strict isolation won't
 help iron out kinks in the design, but could slow down development by forcing mocks for singletons, etc.
+
+### D7: Blob storage for files has no limits
+
+Commiting the file blobs as byte arrays means the system can become unpredictable, so this is risky.
+Hypothesis is that we simplify the implementation to meet the functional requirments, but we will
+need to revisit limits and the implmentation before general purpose release. once the scenarios
+are understood, then limits will need to be tested and enforced.
 
 # TODO : slim down devcontainers stuff
 

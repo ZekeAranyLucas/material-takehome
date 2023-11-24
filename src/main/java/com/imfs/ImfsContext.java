@@ -74,4 +74,9 @@ public class ImfsContext {
         Files.write(file, Arrays.asList(lines), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
     }
 
+    public List<String> readLines(String string) throws IOException {
+        Path file = this.path.resolve(string);
+        return Files.readAllLines(file);
+    }
+
 }

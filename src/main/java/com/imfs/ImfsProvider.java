@@ -117,14 +117,10 @@ public class ImfsProvider extends FileSystemProvider {
     public SeekableByteChannel newByteChannel(Path arg0, Set<? extends OpenOption> options, FileAttribute<?>... arg2)
             throws IOException {
         var imfsPath = checkPath(arg0);
-        if (options.contains(StandardOpenOption.READ)) {
-            throw new UnsupportedOperationException("Unimplemented method 'newByteChannel' for reading");
-        }
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
+        var kid = imfsPath.getMaterializedPath();
+        var exists = fileSystem.contains(kid);
         if (options.contains(StandardOpenOption.WRITE)) {
-            var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
-            var kid = imfsPath.getMaterializedPath();
-            var exists = fileSystem.contains(kid);
-
             if (exists && options.contains(StandardOpenOption.CREATE_NEW)) {
                 throw new FileAlreadyExistsException("File at path:" + imfsPath.toUri() + " already exists");
             }
@@ -132,9 +128,11 @@ public class ImfsProvider extends FileSystemProvider {
             fileSystem.putBlob(kid, new byte[] {});
             var result = new ImfsWritableByteChannel(imfsPath);
             return new ImfsSeekableByteChannel(result);
+        } else if (options.contains(StandardOpenOption.READ) || options.isEmpty()) {
+            return new ByteArraySeekableByteChannel(fileSystem.getBlob(kid));
         }
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'newByteChannel'");
+        throw new UnsupportedOperationException("only READ and WRITE are implemented in 'newByteChannel'");
     }
 
     @Override
