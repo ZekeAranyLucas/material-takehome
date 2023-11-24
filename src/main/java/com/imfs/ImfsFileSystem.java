@@ -119,6 +119,10 @@ public class ImfsFileSystem extends FileSystem {
         entries.add(kid);
     }
 
+    public boolean contains(String kid) {
+        return entries.contains(kid);
+    }
+
     public void reset() {
         entries = initEntries(key);
     }

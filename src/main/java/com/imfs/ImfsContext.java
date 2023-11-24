@@ -17,6 +17,10 @@ public class ImfsContext {
         this.path = (ImfsPath) Paths.get(uri);
     }
 
+    public ImfsContext(Path path) {
+        this.path = (ImfsPath) path;
+    }
+
     public Path getPath() {
         return this.path;
     }
@@ -32,8 +36,27 @@ public class ImfsContext {
                 .collect(Collectors.toList());
     }
 
-    public void mkdir(String string) throws IOException {
-        Files.createDirectory(this.path.resolve(string));
+    public ImfsContext mkdir(String string) throws IOException {
+        var result = Files.createDirectory(this.path.resolve(string));
+        return new ImfsContext(result);
+    }
+
+    // change directory returns a new context if succesful, null otherwise.
+    // this is so that context remains immutable.
+    public ImfsContext cd(String string) {
+        if (string.equals(".")) {
+            return this;
+        }
+        if (string.equals("..")) {
+            var parent = this.path.getParent();
+            // won't fail even at the root
+            return new ImfsContext(parent);
+        }
+        var child = this.path.resolve(string);
+        if (Files.isDirectory(child)) {
+            return new ImfsContext(child);
+        }
+        return null;
     }
 
 }

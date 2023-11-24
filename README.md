@@ -20,7 +20,7 @@
 
 ## Functional requirements
 
-- [] Change the current working directory. The working directory begins at '/'. You may traverse to a child directory or the parent.
+- [x] Change the current working directory. The working directory begins at '/'. You may traverse to a child directory or the parent.
 - [x] Get the current working directory. Returns the current working directory's path from the root to console. Example: ‘/school/homework’
 - [x] Create a new directory. The current working directory is the parent.
 - [x] Get the directory contents: Returns the children of the current working directory.

@@ -1,5 +1,6 @@
 package com.imfs;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
@@ -12,18 +13,28 @@ import java.nio.file.FileSystem;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.ProviderMismatchException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Iterator;
 
 public class ImfsProvider extends FileSystemProvider {
     static final String IMFS_SCHEME = "imfs";
     private static final Map<String, ImfsFileSystem> cache = new HashMap<>();
+
+    static ImfsPath checkPath(Path obj) {
+        Objects.requireNonNull(obj);
+        if (!(obj instanceof ImfsPath)) {
+            throw new ProviderMismatchException();
+        }
+        return (ImfsPath) obj;
+    }
 
     @Override
     public void checkAccess(Path arg0, AccessMode... arg1) throws IOException {
@@ -39,8 +50,9 @@ public class ImfsProvider extends FileSystemProvider {
 
     @Override
     public void createDirectory(Path path, FileAttribute<?>... arg1) throws IOException {
-        var fileSystem = (ImfsFileSystem) path.getFileSystem();
-        var kid = path.toUri().getPath();
+        var imfsPath = checkPath(path);
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
+        var kid = imfsPath.getMaterializedPath();
         fileSystem.addEntry(kid);
     }
 
@@ -138,10 +150,19 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public <A extends BasicFileAttributes> A readAttributes(Path arg0, Class<A> arg1, LinkOption... arg2)
+    public <A extends BasicFileAttributes> A readAttributes(Path arg0, Class<A> classz, LinkOption... arg2)
             throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'readAttributes'");
+        var lmfsPath = checkPath(arg0);
+        var fileSystem = (ImfsFileSystem) lmfsPath.getFileSystem();
+        if (classz.equals(BasicFileAttributes.class)) {
+            if (fileSystem.contains(lmfsPath.getMaterializedPath())) {
+                return (A) new ImfsFileAttributes();
+            }
+            throw new FileNotFoundException("No such file or directory: " + lmfsPath.toUri().toString());
+        } else {
+            throw new UnsupportedOperationException("cannot read attributes of type: " + classz);
+        }
+
     }
 
     @Override

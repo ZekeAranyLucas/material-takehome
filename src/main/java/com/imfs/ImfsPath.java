@@ -22,9 +22,23 @@ public class ImfsPath implements Path {
 
     @Override
     public Path resolve(String relative) {
-        URI result = this.uri.resolve(relative);
-        // TODO: what if relative is not actually relative?
-        return new ImfsPath(fileSystem, result);
+        URI relUri = URI.create(relative);
+        URI resolved;
+        if (relUri.isAbsolute()) {
+            // we don't expect absolute URIs yet
+            // they might use a different instance of the fileSystem
+            throw new UnsupportedOperationException("Unimplemented absolute URI resolve");
+        }
+        if (relative.startsWith("/") || this.uri.getPath().equals("/")) {
+            // if either are root, then we can just resolve
+            resolved = this.uri.resolve(relative);
+        } else {
+            // otherwise we need to append the relative to the path
+            // FS Path is different than URI in this respect.
+            // explicitly use resolveSibling to replace the last path component
+            resolved = this.uri.resolve(this.uri.getPath() + "/" + relative);
+        }
+        return new ImfsPath(fileSystem, resolved);
     }
 
     @Override
@@ -141,5 +155,10 @@ public class ImfsPath implements Path {
         }
         return other instanceof ImfsPath
                 && this.uri.equals(((ImfsPath) other).uri);
+    }
+
+    public String getMaterializedPath() {
+        var path = this.uri.getPath();
+        return path.substring(1);
     }
 }
