@@ -2,6 +2,7 @@ package com.imfs;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.Arrays;
+import java.util.HashMap;
 
 public class ImfsFileSystem extends FileSystem {
 
@@ -20,11 +22,13 @@ public class ImfsFileSystem extends FileSystem {
     private String key;
 
     private ArrayList<String> entries;
+    private HashMap<String, byte[]> blobs;
 
     public ImfsFileSystem(ImfsProvider imfsProvider, String key) {
         this.provider = imfsProvider;
         this.key = key;
         this.entries = initEntries(key);
+        this.blobs = new HashMap<>();
     }
 
     private static ArrayList<String> initEntries(String key) {
@@ -125,9 +129,23 @@ public class ImfsFileSystem extends FileSystem {
 
     public void reset() {
         entries = initEntries(key);
+        this.blobs = new HashMap<>();
     }
 
     public void removeEntry(String kid) {
         entries.remove(kid);
+        blobs.remove(kid);
+    }
+
+    public void putBlob(String kid, byte[] bytes) {
+        blobs.put(kid, bytes);
+    }
+
+    public boolean isDirectory(String kid) {
+        return !blobs.containsKey(kid);
+    }
+
+    public long getSize(String kid) {
+        return blobs.get(kid).length;
     }
 }

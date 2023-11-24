@@ -2,9 +2,11 @@ package com.imfs;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -100,5 +102,29 @@ public class ImfsContextTest {
         kids = context.ls();
         assertArrayEquals(new String[] { "math", "spanish" }, kids.toArray());
         assertEquals(false, Files.isDirectory(history));
+    }
+
+    @Test
+    public void testMkfile() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+
+        context.mkfile("fun.txt");
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish", "fun.txt" }, kids.toArray());
+        var fun = Paths.get(URI.create("imfs://ImfsContextTest/fun.txt"));
+        assertEquals(false, Files.isDirectory(fun));
+    }
+
+    @Test
+    public void testMkfileFails() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+
+        assertThrows(FileAlreadyExistsException.class,
+                () -> context.mkfile("math"));
+
     }
 }

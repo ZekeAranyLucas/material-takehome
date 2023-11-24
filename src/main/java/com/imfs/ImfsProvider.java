@@ -8,12 +8,14 @@ import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.DirectoryStream.Filter;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.ProviderMismatchException;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
@@ -112,15 +114,33 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public SeekableByteChannel newByteChannel(Path arg0, Set<? extends OpenOption> arg1, FileAttribute<?>... arg2)
+    public SeekableByteChannel newByteChannel(Path arg0, Set<? extends OpenOption> options, FileAttribute<?>... arg2)
             throws IOException {
+        var imfsPath = checkPath(arg0);
+        if (options.contains(StandardOpenOption.READ)) {
+            throw new UnsupportedOperationException("Unimplemented method 'newByteChannel' for reading");
+        }
+        if (options.contains(StandardOpenOption.WRITE)) {
+            var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
+            var kid = imfsPath.getMaterializedPath();
+            var exists = fileSystem.contains(kid);
+
+            if (exists && options.contains(StandardOpenOption.CREATE_NEW)) {
+                throw new FileAlreadyExistsException("File at path:" + imfsPath.toUri() + " already exists");
+            }
+            fileSystem.addEntry(kid);
+            fileSystem.putBlob(kid, new byte[] {});
+            var result = new ImfsWritableByteChannel(imfsPath);
+            return new ImfsSeekableByteChannel(result);
+        }
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'newByteChannel'");
     }
 
     @Override
     public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> arg1) throws IOException {
-        var fileSystem = (ImfsFileSystem) path.getFileSystem();
+        var imfsPath = checkPath(path);
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         var stream = fileSystem.streamAllPaths()
                 .filter(each -> each.getParent().equals(path))
                 .filter(arg0 -> {
@@ -154,13 +174,13 @@ public class ImfsProvider extends FileSystemProvider {
     @Override
     public <A extends BasicFileAttributes> A readAttributes(Path arg0, Class<A> classz, LinkOption... arg2)
             throws IOException {
-        var lmfsPath = checkPath(arg0);
-        var fileSystem = (ImfsFileSystem) lmfsPath.getFileSystem();
+        var imfsPath = checkPath(arg0);
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         if (classz.equals(BasicFileAttributes.class)) {
-            if (fileSystem.contains(lmfsPath.getMaterializedPath())) {
-                return (A) new ImfsFileAttributes();
+            if (fileSystem.contains(imfsPath.getMaterializedPath())) {
+                return (A) new ImfsFileAttributes(imfsPath);
             }
-            throw new FileNotFoundException("No such file or directory: " + lmfsPath.toUri().toString());
+            throw new FileNotFoundException("No such file or directory: " + imfsPath.toUri().toString());
         } else {
             throw new UnsupportedOperationException("cannot read attributes of type: " + classz);
         }

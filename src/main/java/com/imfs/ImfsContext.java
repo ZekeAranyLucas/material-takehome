@@ -63,4 +63,8 @@ public class ImfsContext {
         Files.delete(this.path.resolve(string));
     }
 
+    public void mkfile(String string) throws IOException {
+        Files.createFile(this.path.resolve(string));
+    }
+
 }

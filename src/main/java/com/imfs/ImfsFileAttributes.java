@@ -5,6 +5,16 @@ import java.nio.file.attribute.FileTime;
 
 public class ImfsFileAttributes implements BasicFileAttributes {
 
+    private boolean isDirectory;
+    private long size;
+
+    public ImfsFileAttributes(ImfsPath imfsPath) {
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
+        var kid = imfsPath.getMaterializedPath();
+        this.isDirectory = fileSystem.isDirectory(kid);
+        this.size = this.isDirectory ? 0 : fileSystem.getSize(kid);
+    }
+
     @Override
     public FileTime creationTime() {
         // TODO Auto-generated method stub
@@ -20,7 +30,7 @@ public class ImfsFileAttributes implements BasicFileAttributes {
     @Override
     public boolean isDirectory() {
         // TODO: only supports directories for now!
-        return true;
+        return this.isDirectory;
     }
 
     @Override
@@ -30,7 +40,7 @@ public class ImfsFileAttributes implements BasicFileAttributes {
 
     @Override
     public boolean isRegularFile() {
-        return !isDirectory();
+        return !this.isDirectory;
     }
 
     @Override
