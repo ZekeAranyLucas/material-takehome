@@ -6,6 +6,7 @@ import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileAlreadyExistsException;
@@ -73,6 +74,9 @@ public class ImfsProvider extends FileSystemProvider {
         var imfsPath = checkPath(path);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         var kid = imfsPath.getMaterializedPath();
+        if (fileSystem.contains(kid)) {
+            throw new FileAlreadyExistsException("File at path:" + path.toUri() + " already exists");
+        }
         fileSystem.addEntry(kid);
     }
 
@@ -81,6 +85,16 @@ public class ImfsProvider extends FileSystemProvider {
         var imfsPath = checkPath(path);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         var kid = imfsPath.getMaterializedPath();
+        if (!fileSystem.contains(kid)) {
+            throw new NoSuchFileException("No such file or directory: " + imfsPath.toUri().toString());
+        }
+        if (fileSystem.isDirectory(kid)) {
+            try (DirectoryStream<Path> dirStream = newDirectoryStream(path, null)) {
+                if (dirStream.iterator().hasNext()) {
+                    throw new DirectoryNotEmptyException("Directory not empty: " + imfsPath.toUri().toString());
+                }
+            }
+        }
         fileSystem.removeEntry(kid);
     }
 
@@ -129,15 +143,6 @@ public class ImfsProvider extends FileSystemProvider {
     public void move(Path source, Path target, CopyOption... options) throws IOException {
         this.copy(source, target, options);
         this.delete(source);
-
-        // var src = checkPath(arg0);
-        // var dst = checkPath(arg1);
-        // var fileSystem = (ImfsFileSystem) src.getFileSystem();
-        // var srcKid = src.getMaterializedPath();
-        // var dstKid = dst.getMaterializedPath();
-        // fileSystem.addEntry(dstKid);
-        // fileSystem.putBlob(dstKid, fileSystem.getBlob(srcKid));
-        // fileSystem.removeEntry(srcKid);
     }
 
     @Override
@@ -170,7 +175,7 @@ public class ImfsProvider extends FileSystemProvider {
                 .filter(each -> each.getParent().equals(path))
                 .filter(arg0 -> {
                     try {
-                        return arg1.accept(arg0);
+                        return arg1 == null || arg1.accept(arg0);
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();

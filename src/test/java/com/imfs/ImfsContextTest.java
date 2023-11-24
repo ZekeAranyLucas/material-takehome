@@ -6,6 +6,7 @@ import static org.junit.Assert.assertThrows;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -273,6 +274,6 @@ public class ImfsContextTest {
         // TODO: this should fail, but right now it doesn't
         // Files.delete() doesn't throw an exception when deleting a non-empty directory
         // so it must fall to the FileSystem implementation to do so.
-        assertThrows(IOException.class, () -> context.rmdir("math"));
+        assertThrows(DirectoryNotEmptyException.class, () -> context.rmdir("math"));
     }
 }

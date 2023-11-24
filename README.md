@@ -36,7 +36,7 @@
 - [x] Find a file/directory: Given a filename, find all the files and directories within the current
       working directory that have exactly that name. **there can be only one**
 - [] Interface with Java's Files.\* APIs.
-- [] throw when trying to delete non-empty directories.
+- [x] throw when trying to delete non-empty directories.
 
 ## Non-functional requirements
 
