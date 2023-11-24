@@ -85,4 +85,15 @@ public class ImfsContext {
         Files.move(srcPath, dstPath);
     }
 
+    public void cp(String src, String dst) throws IOException {
+        Path srcPath = this.path.resolve(src);
+        Path dstPath = this.path.resolve(dst);
+        Files.copy(srcPath, dstPath);
+    }
+
+    public URI find(String string) {
+        Path target = this.path.resolve(string);
+        return Files.exists(target) ? target.toUri() : null;
+    }
+
 }

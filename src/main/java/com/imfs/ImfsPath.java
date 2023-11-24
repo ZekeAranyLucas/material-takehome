@@ -14,8 +14,17 @@ public class ImfsPath implements Path {
 
     private URI uri;
     private FileSystem fileSystem;
+    private String materializedPath;
 
     public ImfsPath(FileSystem fileSystem, URI uri) {
+        if (!uri.isAbsolute()) {
+            // TODO: don't support relative URIs yet
+            // see branch fix-mkdirs-and-relative-paths
+            throw new UnsupportedOperationException("Unimplemented relative URI: " + uri.toString());
+        }
+
+        var path = uri.getPath();
+        this.materializedPath = path.substring(1);
         this.fileSystem = fileSystem;
         this.uri = uri;
     }
@@ -158,7 +167,6 @@ public class ImfsPath implements Path {
     }
 
     public String getMaterializedPath() {
-        var path = this.uri.getPath();
-        return path.substring(1);
+        return materializedPath;
     }
 }

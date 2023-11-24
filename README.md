@@ -33,8 +33,8 @@
 - [x] Get file contents: Returns the content of a file in the current working directory.
 - [x] Move a file: Move an existing file in the current working directory to a new location (in
       the same directory).
-- [] Find a file/directory: Given a filename, find all the files and directories within the current
-  working directory that have exactly that name.
+- [x] Find a file/directory: Given a filename, find all the files and directories within the current
+      working directory that have exactly that name. **there can be only one**
 - [] Interface with Java's Files.\* APIs.
 - [] throw when trying to delete non-empty directories.
 
@@ -95,6 +95,12 @@ Commiting the file blobs as byte arrays means the system can become unpredictabl
 Hypothesis is that we simplify the implementation to meet the functional requirments, but we will
 need to revisit limits and the implmentation before general purpose release. once the scenarios
 are understood, then limits will need to be tested and enforced.
+
+### D8: defer support for relative paths
+
+Relative paths are required to use some Files APIs (like [createDirectories](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#createDirectories-java.nio.file.Path-java.nio.file.attribute.FileAttribute...-)).
+Hypothesis the leverage for doing this right now is weak, and the time is better spent on other scenarios.
+Relative paths is also one of the suggested extensions. Prototype is in branch fix-mkdirs-and-relative-paths.
 
 # TODO : slim down devcontainers stuff
 

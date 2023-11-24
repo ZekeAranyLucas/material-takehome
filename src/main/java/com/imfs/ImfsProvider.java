@@ -12,6 +12,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.ProviderMismatchException;
@@ -30,7 +31,7 @@ public class ImfsProvider extends FileSystemProvider {
     static final String IMFS_SCHEME = "imfs";
     private static final Map<String, ImfsFileSystem> cache = new HashMap<>();
 
-    static ImfsPath checkPath(Path obj) {
+    private static ImfsPath checkPath(Path obj) {
         Objects.requireNonNull(obj);
         if (!(obj instanceof ImfsPath)) {
             throw new ProviderMismatchException();
@@ -39,15 +40,32 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public void checkAccess(Path arg0, AccessMode... arg1) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'checkAccess'");
+    public void checkAccess(Path path, AccessMode... arg1) throws IOException {
+        var imfsPath = checkPath(path);
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
+        var kid = imfsPath.getMaterializedPath();
+        if (!kid.isEmpty() && !fileSystem.contains(kid)) {
+            throw new NoSuchFileException("No such file or directory: " + imfsPath.toUri().toString());
+        }
     }
 
     @Override
     public void copy(Path arg0, Path arg1, CopyOption... arg2) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'copy'");
+        var src = checkPath(arg0);
+        var dst = checkPath(arg1);
+        checkAccess(src);
+        checkAccess(dst.getParent());
+        var fileSystem = (ImfsFileSystem) src.getFileSystem();
+        var srcKid = src.getMaterializedPath();
+        var dstKid = dst.getMaterializedPath();
+        if (fileSystem.contains(dstKid)) {
+            throw new FileAlreadyExistsException("File at path:" + dst.toUri() + " already exists");
+        }
+        fileSystem.addEntry(dstKid);
+        var blob = fileSystem.getBlob(srcKid);
+        if (blob != null) {
+            fileSystem.putBlob(dstKid, blob);
+        }
     }
 
     @Override
@@ -108,15 +126,18 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public void move(Path arg0, Path arg1, CopyOption... arg2) throws IOException {
-        var src = checkPath(arg0);
-        var dst = checkPath(arg1);
-        var fileSystem = (ImfsFileSystem) src.getFileSystem();
-        var srcKid = src.getMaterializedPath();
-        var dstKid = dst.getMaterializedPath();
-        fileSystem.addEntry(dstKid);
-        fileSystem.putBlob(dstKid, fileSystem.getBlob(srcKid));
-        fileSystem.removeEntry(srcKid);
+    public void move(Path source, Path target, CopyOption... options) throws IOException {
+        this.copy(source, target, options);
+        this.delete(source);
+
+        // var src = checkPath(arg0);
+        // var dst = checkPath(arg1);
+        // var fileSystem = (ImfsFileSystem) src.getFileSystem();
+        // var srcKid = src.getMaterializedPath();
+        // var dstKid = dst.getMaterializedPath();
+        // fileSystem.addEntry(dstKid);
+        // fileSystem.putBlob(dstKid, fileSystem.getBlob(srcKid));
+        // fileSystem.removeEntry(srcKid);
     }
 
     @Override

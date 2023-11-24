@@ -197,6 +197,62 @@ public class ImfsContextTest {
     }
 
     @Test
+    public void testCopyDir() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+        var fun = Paths.get(URI.create("imfs://ImfsContextTest/arithmetics"));
+        assertEquals(false, Files.isDirectory(fun));
+
+        context.cp("math", "arithmetics");
+
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish", "arithmetics" }, kids.toArray());
+        assertEquals(true, Files.isDirectory(fun));
+    }
+
+    @Test
+    public void testCopyFile() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+        var fun = Paths.get(URI.create("imfs://ImfsContextTest/fun.txt"));
+        assertEquals(false, Files.isRegularFile(fun));
+
+        context.write("dumb.txt", new String[] { "hello", "world", "again" });
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish", "dumb.txt" }, kids.toArray());
+
+        context.cp("dumb.txt", "fun.txt");
+
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish", "dumb.txt", "fun.txt" }, kids.toArray());
+        assertEquals(true, Files.isRegularFile(fun));
+    }
+
+    @Test
+    public void testCopyColllision() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+        var fun = Paths.get(URI.create("imfs://ImfsContextTest/fun.txt"));
+        assertEquals(false, Files.isRegularFile(fun));
+
+        context.write("dumb.txt", new String[] { "hello", "world", "again" });
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish", "dumb.txt" }, kids.toArray());
+
+        assertThrows(FileAlreadyExistsException.class, () -> context.cp("dumb.txt", "math"));
+    }
+
+    @Test
+    public void testFindName() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        assertEquals("imfs://ImfsContextTest/math", context.find("math").toString());
+        assertEquals(null, context.find("fun.txt"));
+    }
+
+    @Test
     public void testRmdirNonEmpty() throws IOException {
         var context = new ImfsContext("imfs://ImfsContextTest/");
         var kids = context.ls();
