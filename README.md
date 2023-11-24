@@ -31,11 +31,17 @@
 - [x] Write file contents: Writes the specified contents to a file in the current working
       directory. All file contents will fit into memory.
 - [x] Get file contents: Returns the content of a file in the current working directory.
-- [] Move a file: Move an existing file in the current working directory to a new location (in
-  the same directory).
+- [x] Move a file: Move an existing file in the current working directory to a new location (in
+      the same directory).
 - [] Find a file/directory: Given a filename, find all the files and directories within the current
   working directory that have exactly that name.
 - [] Interface with Java's Files.\* APIs.
+- [] throw when trying to delete non-empty directories.
+
+## Non-functional requirements
+
+- [] move away from ArrayList for ImfsFileSystem before performance starts to suck!
+- [] limit size of files to something testable/rational. if the files are big, fragmentation will be a bad problem.
 
 # Architecture
 
@@ -47,7 +53,8 @@
 
 ### D1: Use Codespaces
 
-This is an opportunity to experiment. The hypothesis is that Codespaces will it easier to share the code and execution environment with reviewers at Material, so that it's less effort to dig in and evaluate the specifics of the project.
+This is an opportunity to experiment. The hypothesis is that Codespaces will it easier to share the code
+and execution environment with reviewers at Material, so that it's less effort to dig in and evaluate the specifics of the project.
 
 ### D2: Implement Java's FileSystemProvider (FSP)
 

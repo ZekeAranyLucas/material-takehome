@@ -109,8 +109,14 @@ public class ImfsProvider extends FileSystemProvider {
 
     @Override
     public void move(Path arg0, Path arg1, CopyOption... arg2) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'move'");
+        var src = checkPath(arg0);
+        var dst = checkPath(arg1);
+        var fileSystem = (ImfsFileSystem) src.getFileSystem();
+        var srcKid = src.getMaterializedPath();
+        var dstKid = dst.getMaterializedPath();
+        fileSystem.addEntry(dstKid);
+        fileSystem.putBlob(dstKid, fileSystem.getBlob(srcKid));
+        fileSystem.removeEntry(srcKid);
     }
 
     @Override

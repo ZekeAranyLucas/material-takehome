@@ -79,4 +79,10 @@ public class ImfsContext {
         return Files.readAllLines(file);
     }
 
+    public void mv(String src, String dst) throws IOException {
+        Path srcPath = this.path.resolve(src);
+        Path dstPath = this.path.resolve(dst);
+        Files.move(srcPath, dstPath);
+    }
+
 }
