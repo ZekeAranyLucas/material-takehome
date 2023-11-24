@@ -57,9 +57,11 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public void delete(Path arg0) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+    public void delete(Path path) throws IOException {
+        var imfsPath = checkPath(path);
+        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
+        var kid = imfsPath.getMaterializedPath();
+        fileSystem.removeEntry(kid);
     }
 
     @Override

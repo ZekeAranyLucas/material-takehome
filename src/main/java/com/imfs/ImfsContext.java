@@ -59,4 +59,8 @@ public class ImfsContext {
         return null;
     }
 
+    public void rmdir(String string) throws IOException {
+        Files.delete(this.path.resolve(string));
+    }
+
 }

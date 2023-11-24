@@ -25,8 +25,8 @@
 - [x] Create a new directory. The current working directory is the parent.
 - [x] Get the directory contents: Returns the children of the current working directory.
       Example: [‘math’, ‘history’, ‘spanish’]
-- [] Remove a directory. The target directory must be among the current working directory’s
-  children.
+- [x] Remove a directory. The target directory must be among the current working directory’s
+      children.
 - [] Create a new file: Creates a new empty file in the current working directory.
 - [] Write file contents: Writes the specified contents to a file in the current working
   directory. All file contents will fit into memory.

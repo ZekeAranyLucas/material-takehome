@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.junit.Before;
@@ -86,4 +87,18 @@ public class ImfsContextTest {
         assertEquals(0, foo.ls().size());
     }
 
+    @Test
+    public void testRmdir() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+        assertArrayEquals(new String[] { "math", "history", "spanish" }, kids.toArray());
+
+        var history = Paths.get(URI.create("imfs://ImfsContextTest/history"));
+        assertEquals(true, Files.isDirectory(history));
+
+        context.rmdir("history");
+        kids = context.ls();
+        assertArrayEquals(new String[] { "math", "spanish" }, kids.toArray());
+        assertEquals(false, Files.isDirectory(history));
+    }
 }

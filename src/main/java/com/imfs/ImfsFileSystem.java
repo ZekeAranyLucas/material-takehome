@@ -126,4 +126,8 @@ public class ImfsFileSystem extends FileSystem {
     public void reset() {
         entries = initEntries(key);
     }
+
+    public void removeEntry(String kid) {
+        entries.remove(kid);
+    }
 }
