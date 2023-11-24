@@ -1,6 +1,7 @@
 package com.imfs;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -8,16 +9,30 @@ import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayList;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.Arrays;
 
 public class ImfsFileSystem extends FileSystem {
 
     private ImfsProvider provider;
     private String key;
 
+    private ArrayList<String> entries;
+
     public ImfsFileSystem(ImfsProvider imfsProvider, String key) {
         this.provider = imfsProvider;
         this.key = key;
+        this.entries = initEntries(key);
+    }
+
+    private static ArrayList<String> initEntries(String key) {
+        var result = new ArrayList<String>();
+        if (key.contains("Test")) {
+            result.addAll(Arrays.asList("math", "history", "spanish"));
+        }
+        return result;
     }
 
     @Override
@@ -93,5 +108,18 @@ public class ImfsFileSystem extends FileSystem {
 
     public String getKey() {
         return key;
+    }
+
+    public Stream<Path> streamAllPaths() {
+        return entries.stream()
+                .map(entry -> new ImfsPath(this, URI.create("imfs://" + key + "/" + entry)));
+    }
+
+    public void addEntry(String kid) {
+        entries.add(kid);
+    }
+
+    public void reset() {
+        entries = initEntries(key);
     }
 }

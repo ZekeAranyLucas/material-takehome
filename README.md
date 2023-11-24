@@ -21,10 +21,10 @@
 ## Functional requirements
 
 - [] Change the current working directory. The working directory begins at '/'. You may traverse to a child directory or the parent.
-- [] Get the current working directory. Returns the current working directory's path from the root to console. Example: ‘/school/homework’
-- [] Create a new directory. The current working directory is the parent.
-- [] Get the directory contents: Returns the children of the current working directory.
-  Example: [‘math’, ‘history’, ‘spanish’]
+- [x] Get the current working directory. Returns the current working directory's path from the root to console. Example: ‘/school/homework’
+- [x] Create a new directory. The current working directory is the parent.
+- [x] Get the directory contents: Returns the children of the current working directory.
+      Example: [‘math’, ‘history’, ‘spanish’]
 - [] Remove a directory. The target directory must be among the current working directory’s
   children.
 - [] Create a new file: Creates a new empty file in the current working directory.
@@ -63,6 +63,24 @@ or thread local, so that we avoid future problems with multiple simultaneous cal
 
 NOTE: Java's working dir for the default file system is not fully mutable,
 so would clearly not meet the requirements of this exercise.
+
+### D4: Use Materialized paths as storage
+
+Materialized paths are where each row contains the full path as the primary key
+instead of doing something with graphs or nested objects. The hypothesis is that understanding and debugging
+will be simpler than the other options. It makes it pretty easy to trade between different storage options
+like arraylist, hashmaps, or even SQL tables.
+
+### D5: Support arbitrary volumes
+
+While the basic requirements are for a single global in-memory store, it's trivial to support multiple.
+The hypothesis is that it will make it easier to do isolated testing, and maybe try alternate storage options.
+The first alternative is "\*Test" namespaces will start with children: [‘math’, ‘history’, ‘spanish’].
+
+### D6: Don't be pedantic about unit testing
+
+Developer testing can include all kinds of test variations. Hypothesis is that strict isolation won't
+help iron out kinks in the design, but could slow down development by forcing mocks for singletons, etc.
 
 # TODO : slim down devcontainers stuff
 

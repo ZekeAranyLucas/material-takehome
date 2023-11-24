@@ -10,6 +10,8 @@ import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Paths;
 
+// Deliberately not constrained to unit testing,
+// while still being developer testing.
 public class ImfsProviderTest {
 
     @Test

@@ -9,7 +9,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -20,6 +19,7 @@ import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 public class ImfsProvider extends FileSystemProvider {
     static final String IMFS_SCHEME = "imfs";
@@ -38,9 +38,10 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public void createDirectory(Path arg0, FileAttribute<?>... arg1) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createDirectory'");
+    public void createDirectory(Path path, FileAttribute<?>... arg1) throws IOException {
+        var fileSystem = (ImfsFileSystem) path.getFileSystem();
+        var kid = path.toUri().getPath();
+        fileSystem.addEntry(kid);
     }
 
     @Override
@@ -70,7 +71,7 @@ public class ImfsProvider extends FileSystemProvider {
 
     @Override
     public Path getPath(URI uri) {
-        return new ImfsPath(uri);
+        return new ImfsPath(getFileSystem(uri), uri);
     }
 
     @Override
@@ -104,9 +105,30 @@ public class ImfsProvider extends FileSystemProvider {
     }
 
     @Override
-    public DirectoryStream<Path> newDirectoryStream(Path arg0, Filter<? super Path> arg1) throws IOException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'newDirectoryStream'");
+    public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> arg1) throws IOException {
+        var fileSystem = (ImfsFileSystem) path.getFileSystem();
+        var stream = fileSystem.streamAllPaths()
+                .filter(each -> each.getParent().equals(path))
+                .filter(arg0 -> {
+                    try {
+                        return arg1.accept(arg0);
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                        return false;
+                    }
+                });
+        return new DirectoryStream<Path>() {
+            @Override
+            public Iterator<Path> iterator() {
+                return stream.iterator();
+            }
+
+            @Override
+            public void close() throws IOException {
+                stream.close();
+            }
+        };
     }
 
     @Override

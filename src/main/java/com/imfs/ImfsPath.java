@@ -13,9 +13,18 @@ import java.nio.file.WatchService;
 public class ImfsPath implements Path {
 
     private URI uri;
+    private FileSystem fileSystem;
 
-    public ImfsPath(URI uri) {
+    public ImfsPath(FileSystem fileSystem, URI uri) {
+        this.fileSystem = fileSystem;
         this.uri = uri;
+    }
+
+    @Override
+    public Path resolve(String relative) {
+        URI result = this.uri.resolve(relative);
+        // TODO: what if relative is not actually relative?
+        return new ImfsPath(fileSystem, result);
     }
 
     @Override
@@ -38,8 +47,7 @@ public class ImfsPath implements Path {
 
     @Override
     public FileSystem getFileSystem() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFileSystem'");
+        return fileSystem;
     }
 
     @Override
@@ -56,8 +64,10 @@ public class ImfsPath implements Path {
 
     @Override
     public Path getParent() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getParent'");
+        String path = uri.getPath();
+        String parentPath = path.substring(0, path.lastIndexOf('/'));
+        URI parentUri = uri.resolve(parentPath);
+        return new ImfsPath(fileSystem, parentUri);
     }
 
     @Override
@@ -68,8 +78,7 @@ public class ImfsPath implements Path {
 
     @Override
     public boolean isAbsolute() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isAbsolute'");
+        return true;
     }
 
     @Override
@@ -122,8 +131,15 @@ public class ImfsPath implements Path {
 
     @Override
     public URI toUri() {
-        // TODO Auto-generated me
         return this.uri;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+        return other instanceof ImfsPath
+                && this.uri.equals(((ImfsPath) other).uri);
+    }
 }
