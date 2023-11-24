@@ -2,7 +2,6 @@ package com.imfs;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -34,7 +33,7 @@ public class ImfsFileSystem extends FileSystem {
     private static ArrayList<String> initEntries(String key) {
         var result = new ArrayList<String>();
         if (key.contains("Test")) {
-            result.addAll(Arrays.asList("math", "history", "spanish"));
+            result.addAll(Arrays.asList("math", "history", "Spanish"));
         }
         return result;
     }

@@ -62,8 +62,7 @@ public class ImfsFileAttributes implements BasicFileAttributes {
 
     @Override
     public long size() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'size'");
+        return this.size;
     }
 
 }

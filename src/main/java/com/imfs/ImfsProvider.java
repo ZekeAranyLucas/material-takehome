@@ -208,13 +208,12 @@ public class ImfsProvider extends FileSystemProvider {
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         if (classz.equals(BasicFileAttributes.class)) {
             if (fileSystem.contains(imfsPath.getMaterializedPath())) {
-                return (A) new ImfsFileAttributes(imfsPath);
+                return classz.cast(new ImfsFileAttributes(imfsPath));
             }
             throw new FileNotFoundException("No such file or directory: " + imfsPath.toUri().toString());
         } else {
             throw new UnsupportedOperationException("cannot read attributes of type: " + classz);
         }
-
     }
 
     @Override
