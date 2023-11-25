@@ -8,14 +8,14 @@
 
 ## Structural parameters
 
-- [x] Choose a language of your choice (excluding bash, Haskell, or scala). **Java selected.**
-- [] Feel free to use small libraries where appropriate instead of reinventing the wheel.
-- [] Feel free to look things up or use other reference material as you would when working
-  normally
+- [x] Choose a language of your choice (excluding bash, Haskell, or scala). **-- Java selected.**
+- [x] Feel free to use small libraries where appropriate instead of reinventing the wheel. **-- Lombok for immutable objects.**
+- [x] Feel free to look things up or use other reference material as you would when working
+      normally. **-- Mostly Java docs for SPI and Google, starting to use copilot.**
 - [] Please make this look as close to real production code as you would submit for code review
   (e.g feel free to refactor aggressively, use helper functions, etc)
-- [x] Submit your code via Git Hub. **https://github.com/ZekeAranyLucas/material-takehome**
-- [] Please include a README that includes how to get your code running/tested.
+- [x] Submit your code via Git Hub. **-- See https://github.com/ZekeAranyLucas/material-takehome**
+- [x] Please include a README that includes how to get your code running/tested.
 
 ## Functional requirements
 
@@ -35,12 +35,14 @@
 - [x] Find a file/directory: Given a filename, find all the files and directories within the current
       working directory that have exactly that name. **there can be only one**
 - [x] throw when trying to delete non-empty directories.
-- [] Interface with Java's Files.\* APIs.
+- [] Interface with Java's `Files.\*` APIs.
 
 ## Non-functional requirements
 
-- [] Move away from ArrayList for ImfsFileSystem before performance starts to suck!
+- [x] Move away from ArrayList for ImfsFileSystem before performance starts to suck!
+- [] Move away from TreeMap depending on the scenarios.
 - [] Limit the size of files to something testable/rational. if the files are big, fragmentation will be a bad problem.
+- [] How important is concurrency? consider if Collections.synchronizedSortedMap is needed.
 
 # Verifying the requirements
 
@@ -65,11 +67,6 @@
    - Add a breakpoint.
    - Press <kbd>F5</kbd> to launch the app in the container.
    - Once the breakpoint is hit, try hovering over variables, examining locals, and more.
-
-## License
-
-Copyright © Microsoft Corporation All rights reserved.<br />
-Licensed under the MIT License. See LICENSE in the project root for license information.
 
 # Architecture
 
@@ -126,3 +123,23 @@ once the scenarios are understood, then limits will need to be tested and enforc
 
 Relative paths are required to use some `Files.*` APIs (like [createDirectories](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#createDirectories-java.nio.file.Path-java.nio.file.attribute.FileAttribute...-)).
 Hypothesis the leverage for doing this right now is weak, and the time is better spent on other scenarios. Relative paths are also one of the suggested extensions. The prototype code is in the branch fix-mkdirs-and-relative-paths.
+
+### D9: Upgrade TreeMap as the storage index
+
+ArrayList and HashMap were easy to use, but bad for any child enumerations, since they
+required going through the entire store for any enumeration. The hypothesis is
+that TreeMap will be good enough until we understand the usage patterns for put/get/enum/io.
+
+- Checking for empty directories (enum kids) is now reasonably cheap.
+- put/get is still faster than ArrayList, but slower than HashMap.
+- enumerating the root still requires iterating over the full set and filtering.
+
+Most likely the next step in indexes would be to use H2, SQLite, or another in-memory RDB.
+That would make these queries possible: `SELECT * WHERE path LIKE 'foo/%' and path NOT LIKE 'foo/%/%'` or for the root `SELECT * WHERE path LIKE '%' and path NOT LIKE '%/%'`
+since root enums are the worst case scenario.
+
+Or switching to something like Nested Set or Adjacency List.
+
+## License
+
+Licensed under the MIT License. See LICENSE in the project root for license information.

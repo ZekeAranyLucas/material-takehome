@@ -17,6 +17,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.ProviderMismatchException;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
@@ -59,14 +60,17 @@ public class ImfsProvider extends FileSystemProvider {
         var fileSystem = (ImfsFileSystem) src.getFileSystem();
         var srcKid = src.getMaterializedPath();
         var dstKid = dst.getMaterializedPath();
-        if (fileSystem.contains(dstKid)) {
+        if (fileSystem.contains(dstKid) || arg2.length > 0 && arg2[0] == StandardCopyOption.REPLACE_EXISTING) {
             throw new FileAlreadyExistsException("File at path:" + dst.toUri() + " already exists");
         }
-        fileSystem.addEntry(dstKid);
-        var blob = fileSystem.getBlob(srcKid);
-        if (blob != null) {
-            fileSystem.putBlob(dstKid, blob);
+        ImfsRecord srcRecord = fileSystem.getRecord(srcKid);
+        if (srcRecord == null) {
+            throw new NoSuchFileException("No such file or directory: " + src.toUri().toString());
         }
+        var dstRecord = srcRecord.toBuilder()
+                .materializedPath(dstKid)
+                .build();
+        fileSystem.putRecord(dstRecord);
     }
 
     @Override
@@ -77,7 +81,7 @@ public class ImfsProvider extends FileSystemProvider {
         if (fileSystem.contains(kid)) {
             throw new FileAlreadyExistsException("File at path:" + path.toUri() + " already exists");
         }
-        fileSystem.addEntry(kid);
+        fileSystem.putRecord(ImfsRecord.ofDir(kid));
     }
 
     @Override
@@ -85,10 +89,11 @@ public class ImfsProvider extends FileSystemProvider {
         var imfsPath = checkPath(path);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         var kid = imfsPath.getMaterializedPath();
-        if (!fileSystem.contains(kid)) {
+        var record = fileSystem.getRecord(kid);
+        if (record == null) {
             throw new NoSuchFileException("No such file or directory: " + imfsPath.toUri().toString());
         }
-        if (fileSystem.isDirectory(kid)) {
+        if (record.getBytes() == null) {
             try (DirectoryStream<Path> dirStream = newDirectoryStream(path, null)) {
                 if (dirStream.iterator().hasNext()) {
                     throw new DirectoryNotEmptyException("Directory not empty: " + imfsPath.toUri().toString());
@@ -156,7 +161,6 @@ public class ImfsProvider extends FileSystemProvider {
             if (exists && options.contains(StandardOpenOption.CREATE_NEW)) {
                 throw new FileAlreadyExistsException("File at path:" + imfsPath.toUri() + " already exists");
             }
-            fileSystem.addEntry(kid);
             fileSystem.putBlob(kid, new byte[] {});
             var result = new ImfsWritableByteChannel(imfsPath);
             return new ImfsSeekableByteChannel(result);
@@ -171,7 +175,7 @@ public class ImfsProvider extends FileSystemProvider {
     public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> arg1) throws IOException {
         var imfsPath = checkPath(path);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
-        var stream = fileSystem.streamAllPaths()
+        var stream = fileSystem.streamChildren(imfsPath.getMaterializedPath())
                 .filter(each -> each.getParent().equals(path))
                 .filter(arg0 -> {
                     try {
@@ -207,8 +211,9 @@ public class ImfsProvider extends FileSystemProvider {
         var imfsPath = checkPath(arg0);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
         if (classz.equals(BasicFileAttributes.class)) {
-            if (fileSystem.contains(imfsPath.getMaterializedPath())) {
-                return classz.cast(new ImfsFileAttributes(imfsPath));
+            var record = fileSystem.getRecord(imfsPath.getMaterializedPath());
+            if (record != null) {
+                return classz.cast(ImfsFileAttributes.of(record));
             }
             throw new FileNotFoundException("No such file or directory: " + imfsPath.toUri().toString());
         } else {

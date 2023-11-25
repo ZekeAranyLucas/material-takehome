@@ -3,16 +3,22 @@ package com.imfs;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 
-public class ImfsFileAttributes implements BasicFileAttributes {
+import lombok.Builder;
+import lombok.Getter;
 
-    private boolean isDirectory;
+@Getter
+@Builder
+public class ImfsFileAttributes implements BasicFileAttributes {
+    private String materializedPath;
+    private boolean hasBytes;
     private long size;
 
-    public ImfsFileAttributes(ImfsPath imfsPath) {
-        var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
-        var kid = imfsPath.getMaterializedPath();
-        this.isDirectory = fileSystem.isDirectory(kid);
-        this.size = this.isDirectory ? 0 : fileSystem.getSize(kid);
+    public static ImfsFileAttributes of(ImfsRecord record) {
+        return ImfsFileAttributes.builder()
+                .materializedPath(record.getMaterializedPath())
+                .hasBytes(record.getBytes() != null)
+                .size(record.getBytes() != null ? record.getBytes().length : 0)
+                .build();
     }
 
     @Override
@@ -23,14 +29,12 @@ public class ImfsFileAttributes implements BasicFileAttributes {
 
     @Override
     public Object fileKey() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'fileKey'");
+        return this.materializedPath;
     }
 
     @Override
     public boolean isDirectory() {
-        // TODO: only supports directories for now!
-        return this.isDirectory;
+        return !this.hasBytes;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class ImfsFileAttributes implements BasicFileAttributes {
 
     @Override
     public boolean isRegularFile() {
-        return !this.isDirectory;
+        return this.hasBytes;
     }
 
     @Override

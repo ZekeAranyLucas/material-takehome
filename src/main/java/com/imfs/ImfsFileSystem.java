@@ -9,31 +9,36 @@ import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
-import java.util.ArrayList;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Stream;
+
+import lombok.var;
+
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.List;
 
 public class ImfsFileSystem extends FileSystem {
+    private static final List<ImfsRecord> TEST_DIRS = Arrays.asList(
+            ImfsRecord.ofDir("math"),
+            ImfsRecord.ofDir("history"),
+            ImfsRecord.ofDir("Spanish"));
 
     private ImfsProvider provider;
     private String key;
 
-    private ArrayList<String> entries;
-    private HashMap<String, byte[]> blobs;
+    TreeMap<String, ImfsRecord> records = new TreeMap<>();
 
     public ImfsFileSystem(ImfsProvider imfsProvider, String key) {
         this.provider = imfsProvider;
         this.key = key;
-        this.entries = initEntries(key);
-        this.blobs = new HashMap<>();
+        this.records = initEntries(key);
     }
 
-    private static ArrayList<String> initEntries(String key) {
-        var result = new ArrayList<String>();
+    private static TreeMap<String, ImfsRecord> initEntries(String key) {
+        TreeMap<String, ImfsRecord> result = new TreeMap<>();
         if (key.contains("Test")) {
-            result.addAll(Arrays.asList("math", "history", "Spanish"));
+            TEST_DIRS.forEach(record -> result.put(record.getMaterializedPath(), record));
         }
         return result;
     }
@@ -114,41 +119,55 @@ public class ImfsFileSystem extends FileSystem {
     }
 
     public Stream<Path> streamAllPaths() {
-        return entries.stream()
-                .map(entry -> new ImfsPath(this, URI.create("imfs://" + key + "/" + entry)));
+        System.out.println("--- streamAllPaths: start");
+        return records.keySet().stream()
+                .map(entry -> {
+                    System.out.println("enum: " + entry);
+                    return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
+                });
     }
 
-    public void addEntry(String kid) {
-        entries.add(kid);
+    public Stream<Path> streamChildren(String materializedPath) {
+        if (materializedPath.length() == 0) {
+            return streamAllPaths();
+        }
+        System.out.println("--- streamChildren: start");
+        var from = materializedPath + "/";
+        var to = materializedPath + "0";
+        var sub = records.subMap(from, to);
+        return sub.keySet().stream()
+                .map(entry -> {
+                    System.out.println("enum: " + entry);
+                    return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
+                });
     }
 
-    public boolean contains(String kid) {
-        return entries.contains(kid);
+    public boolean contains(String materializedPath) {
+        return records.containsKey(materializedPath);
     }
 
     public void reset() {
-        entries = initEntries(key);
-        this.blobs = new HashMap<>();
+        records = initEntries(key);
     }
 
-    public void removeEntry(String kid) {
-        entries.remove(kid);
-        blobs.remove(kid);
+    public void removeEntry(String materializedPath) {
+        records.remove(materializedPath);
     }
 
-    public void putBlob(String kid, byte[] bytes) {
-        blobs.put(kid, bytes);
+    public void putBlob(String materializedPath, byte[] bytes) {
+        records.put(materializedPath,
+                ImfsRecord.builder().materializedPath(materializedPath).bytes(bytes).build());
     }
 
-    public boolean isDirectory(String kid) {
-        return !blobs.containsKey(kid);
+    public byte[] getBlob(String materializedPath) {
+        return records.get(materializedPath).getBytes();
     }
 
-    public long getSize(String kid) {
-        return blobs.get(kid).length;
+    public ImfsRecord getRecord(String materializedPath) {
+        return records.get(materializedPath);
     }
 
-    public byte[] getBlob(String kid) {
-        return blobs.get(kid);
+    public void putRecord(ImfsRecord record) {
+        records.put(record.getMaterializedPath(), record);
     }
 }
