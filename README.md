@@ -12,7 +12,7 @@
 - [x] Feel free to use small libraries where appropriate instead of reinventing the wheel. **-- Lombok for immutable objects.**
 - [x] Feel free to look things up or use other reference material as you would when working
       normally. **-- Mostly Java docs for SPI and Google, starting to use copilot.**
-- [] Please make this look as close to real production code as you would submit for code review
+- [ ] Please make this look as close to real production code as you would submit for code review
   (e.g feel free to refactor aggressively, use helper functions, etc)
 - [x] Submit your code via Git Hub. **-- See https://github.com/ZekeAranyLucas/material-takehome**
 - [x] Please include a README that includes how to get your code running/tested.
