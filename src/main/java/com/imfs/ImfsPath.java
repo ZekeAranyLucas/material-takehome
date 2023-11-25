@@ -31,6 +31,9 @@ public class ImfsPath implements Path {
 
     @Override
     public Path resolve(String relative) {
+        if (relative.endsWith("/")) {
+            relative = relative.substring(0, relative.length() - 1);
+        }
         URI relUri = URI.create(relative);
         URI resolved;
         if (relUri.isAbsolute()) {

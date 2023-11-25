@@ -11,6 +11,8 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -304,5 +306,27 @@ public class ImfsContextTest {
         assertArrayEquals(new String[] { "Spanish", "history" }, kids.toArray());
         assertEquals(0, math.ls().size());
         assertEquals(false, Files.isDirectory(foo.getPath()));
+    }
+
+    @Test
+    public void testImportFiles() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+
+        // use working dir to copy the source code files into memory
+        context.importFiles("src", "src");
+
+        kids = context.ls();
+        assertArrayEquals(new String[] { "Spanish", "history", "math", "src" }, kids.toArray());
+        Pattern pattern = Pattern.compile(".*Test\\.java$");
+        var tests = Files.find(context.getPath(), Integer.MAX_VALUE, (path, attr) -> {
+            var pathString = path.toUri().toString();
+            var matched = pattern.matcher(pathString).matches();
+            return matched;
+        }).map(path -> path.toUri().getPath()).collect(Collectors.toList());
+        assertArrayEquals(new String[] { "/src/test/java/com/imfs/ImfsContextTest.java",
+                "/src/test/java/com/imfs/ImfsProviderTest.java",
+                "/src/test/java/com/imfs/app/AppTest.java" }, tests.toArray());
+
     }
 }

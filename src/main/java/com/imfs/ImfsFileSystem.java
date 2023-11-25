@@ -26,6 +26,7 @@ public class ImfsFileSystem extends FileSystem {
 
     private ImfsProvider provider;
     private String key;
+    private final ImfsRecord ROOT = ImfsRecord.ofDir("");
 
     TreeMap<String, ImfsRecord> records = new TreeMap<>();
 
@@ -119,10 +120,10 @@ public class ImfsFileSystem extends FileSystem {
     }
 
     public Stream<Path> streamAllPaths() {
-        System.out.println("--- streamAllPaths: start");
+        // System.out.println("--- streamAllPaths: start");
         return records.keySet().stream()
                 .map(entry -> {
-                    System.out.println("enum: " + entry);
+                    // System.out.println("enum: " + entry);
                     return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
                 });
     }
@@ -131,13 +132,13 @@ public class ImfsFileSystem extends FileSystem {
         if (materializedPath.length() == 0) {
             return streamAllPaths();
         }
-        System.out.println("--- streamChildren: start");
+        // System.out.println("--- streamChildren: start");
         var from = materializedPath + "/";
         var to = materializedPath + "0";
         var sub = records.subMap(from, to);
         return sub.keySet().stream()
                 .map(entry -> {
-                    System.out.println("enum: " + entry);
+                    // System.out.println("enum: " + entry);
                     return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
                 });
     }
@@ -164,6 +165,9 @@ public class ImfsFileSystem extends FileSystem {
     }
 
     public ImfsRecord getRecord(String materializedPath) {
+        if (materializedPath.length() == 0) {
+            return ROOT;
+        }
         return records.get(materializedPath);
     }
 

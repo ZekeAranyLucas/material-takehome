@@ -167,4 +167,23 @@ public class ImfsContext {
         return Files.exists(target) ? target.toUri() : null;
     }
 
+    /**
+     * Imports tree of files from a source directory to a destination directory.
+     * Used to import files from the host file system into the Imfs file system.
+     * 
+     * @param src the path of the source directory
+     * @param dst the path of the destination directory
+     * @throws IOException if an I/O error occurs during the file import process
+     */
+    public void importFiles(String src, String dst) throws IOException {
+        Path root = Paths.get(src);
+        Files.walk(root).forEach(srcPath -> {
+            Path dstPath = this.path.resolve(dst + "/" + root.relativize(srcPath).toString());
+            try {
+                Files.copy(srcPath, dstPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 }

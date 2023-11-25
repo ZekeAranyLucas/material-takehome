@@ -44,6 +44,17 @@
 - [] Limit the size of files to something testable/rational. if the files are big, fragmentation will be a bad problem.
 - [] How important is concurrency? consider if Collections.synchronizedSortedMap is needed.
 
+## Extension requirements
+
+### [x] Walk a subtree
+
+- [x] You can walk through all the recursive contents of a directory, invoking a passed-in function on each child directory/file.
+- [x] While walking, the passed-in function can arbitrarily choose not to recurse into certain subdirectories.
+- [x] Use this to implement some recursive operations. For example, finding the first file in a subtree whose name matches a regex.
+      **-- see [testImportFiles](src/test/java/com/imfs/ImfsContextTest.java)**
+
+NOTE: Traversal is supported explicitly via NIO's [`walk() and walkTree()`](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#walk-java.nio.file.Path-java.nio.file.FileVisitOption...-).
+
 # Verifying the requirements
 
 1. **Try Out Codespaces: Java**
