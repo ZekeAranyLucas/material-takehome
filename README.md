@@ -46,6 +46,22 @@
 
 ## Extension requirements
 
+Copied from the PDF.
+
+### [x] Move and copy
+
+- [x] You can move or copy files and directories. **-- including to and from the file system!** **See [importFiles](src/main/java/com/imfs/ImfsContext.java).**
+- [] Support merging the contents of two directories when moving or copying one into
+  the other.
+- [] Handle name collisions in some way (e.g. auto renaming files, merging
+  directories.)
+
+### [x] Operations on paths
+
+- [x] When doing basic operations (changing the current working directory, creating or moving files or folders, etc), you can use absolute paths instead of only operating on objects in the current working directory. **-- ImfsContext resolves everything to absolute paths anyway.**
+- [?] You can use relative paths (relative to the current working directory) as well, including the special “..” path that refers to the parent directory. **-- some relative operations just work.**
+- []When creating or moving items to a new path, you can choose to automatically create any intermediate directories on the path that don’t exist yet.
+
 ### [x] Walk a subtree
 
 - [x] You can walk through all the recursive contents of a directory, invoking a passed-in function on each child directory/file.
