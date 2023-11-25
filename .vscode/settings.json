@@ -1,6 +1,11 @@
 {
     "cSpell.words": [
-        "Imfs"
+        "Codespace",
+        "Codespaces",
+        "hardlinks",
+        "Imfs",
+        "mkdirs",
+        "NIO"
     ],
     "java.configuration.updateBuildConfiguration": "interactive"
 }

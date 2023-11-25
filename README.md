@@ -1,21 +1,72 @@
-# Material Security Takehome Interview: In-Memory Filesystem
+# Material Security Take-home Interview: In-Memory Filesystem
 
-> ### Prompt
->
+## Overview
+
+### Prompt
 > Build an in-memory filesystem! This is a simplified file system that supports both files and directories. You don’t have to work with any actual files, everything will just be contained in-memory.
 >
 > Write functions that correspond to familiar file system commands. We only care about the capabilities, so you may choose to combine multiple capabilities into one function, or even split up one capability amongst multiple functions (up to you). You can leave comments and TODOs if there are ideas or issues you want to discuss or point out, but don’t have time to implement/fix, or aren’t quite sure how.
 
+### Proposal
+
+Build project using Codespaces and Java to optimize for accessibility by reviewers. 
+Since we are using Java, integrating with NIO will get us the richest possible implementation.
+See [Decision Records](#decision-records) for details.
+
+### Results
+
+**Implementation based on FileSystemProvider has proven to be a success and a lot of fun!** 
+
+Once all of the [functional requirements](#functional-requirements) were met, 
+many of the extension capabilities were also usable, or added by simple incremental changes 
+(eg, streams, paths, tree walks, move, and copy).
+And some features come almost for free, like import files from the OS. 
+
+# Verifying the requirements
+
+1. **Try Out Codespaces: Java**
+
+   - Follow these steps to open this repo in Codespaces:
+   - Click the **Code** drop-down menu.
+   - Click on the **Codespaces** tab.
+   - Click **Create Codespace on main**.
+   - For more info, check out the [GitHub documentation](https://docs.github.com/en/free-pro-team@latest/github/developing-online-with-codespaces/creating-a-codespace#creating-a-codespace).
+   - Or just treat it like a Java repo.
+
+2. **Run the Tests:**
+
+   - The core functional scenarios are covered in [ImfsContextTest](src/test/java/com/imfs/ImfsContextTest.java).
+   - Open the file and use the right-click `Run Test` options.
+   - Add a breakpoint.
+   - Click the `Debug Test` in the Code Lens above the function and watch it hit any breakpoints.
+   - Once the breakpoint is hit, try hovering over variables, examining locals, and more.
+
+3. **Explore the code:**
+
+   - Open [ImfsContext](src/main/java/com/imfs/ImfsContext.java) to see bash like behaviors (ls, mkdir, rm, ...). 
+   - Open [ImfProvider](src/main/java/com/imfs/ImfsProvider.java) for core behavior.
+   - Open [ImfsFileSystem](src/main/java/com/imfs/ImfsFileSystem.java) to see the storage.
+
+# Requirements
+
+Copied from the PDF.
+
 ## Structural parameters
 
-- [x] Choose a language of your choice (excluding bash, Haskell, or scala). **-- Java selected.**
-- [x] Feel free to use small libraries where appropriate instead of reinventing the wheel. **-- Lombok for immutable objects.**
+- [x] Choose a language of your choice (excluding bash, Haskell, or scala). 
+   - ***>> Java selected.***
+- [x] Feel free to use small libraries where appropriate instead of reinventing the wheel. 
+   - ***>> Added Lombok for immutable POJOs.***
 - [x] Feel free to look things up or use other reference material as you would when working
-      normally. **-- Mostly Java docs for SPI and Google, starting to use copilot.**
-- [ ] Please make this look as close to real production code as you would submit for code review
+      normally. 
+   - ***>> Mostly Java docs for SPI and Google, starting to use copilot.***
+- [x] Please make this look as close to real production code as you would submit for code review
   (e.g feel free to refactor aggressively, use helper functions, etc)
-- [x] Submit your code via Git Hub. **-- See https://github.com/ZekeAranyLucas/material-takehome**
+   - ***>> Depends on cultural norms.***
+- [x] Submit your code via Git Hub. 
+   - ***>> See [repo](https://github.com/ZekeAranyLucas/material-takehome).***
 - [x] Please include a README that includes how to get your code running/tested.
+   - ***>> Currently reading.***
 
 ## Functional requirements
 
@@ -33,67 +84,79 @@
 - [x] Move a file: Move an existing file in the current working directory to a new location (in
       the same directory).
 - [x] Find a file/directory: Given a filename, find all the files and directories within the current
-      working directory that have exactly that name. **there can be only one**
+      working directory that have exactly that name.
 - [x] throw when trying to delete non-empty directories.
-- [] Interface with Java's `Files.\*` APIs.
-
-## Non-functional requirements
-
-- [x] Move away from ArrayList for ImfsFileSystem before performance starts to suck!
-- [] Move away from TreeMap depending on the scenarios.
-- [] Limit the size of files to something testable/rational. if the files are big, fragmentation will be a bad problem.
-- [] How important is concurrency? consider if Collections.synchronizedSortedMap is needed.
+- [x] Interface with Java's `Files.\*` APIs.
 
 ## Extension requirements
 
-Copied from the PDF.
-
 ### [x] Move and copy
 
-- [x] You can move or copy files and directories. **-- including to and from the file system!** **See [importFiles](src/main/java/com/imfs/ImfsContext.java).**
-- [] Support merging the contents of two directories when moving or copying one into
+- [x] You can move or copy files and directories. **>> including to and from the file system!** **See [importFiles](src/main/java/com/imfs/ImfsContext.java).**
+- [ ] Support merging the contents of two directories when moving or copying one into
   the other.
-- [] Handle name collisions in some way (e.g. auto renaming files, merging
+- [ ] Handle name collisions in some way (e.g. auto renaming files, merging
   directories.)
 
 ### [x] Operations on paths
 
-- [x] When doing basic operations (changing the current working directory, creating or moving files or folders, etc), you can use absolute paths instead of only operating on objects in the current working directory. **-- ImfsContext resolves everything to absolute paths anyway.**
-- [?] You can use relative paths (relative to the current working directory) as well, including the special “..” path that refers to the parent directory. **-- some relative operations just work.**
-- []When creating or moving items to a new path, you can choose to automatically create any intermediate directories on the path that don’t exist yet.
+- [x] When doing basic operations (changing the current working directory, creating or moving files or folders, etc), you can use absolute paths instead of only operating on objects in the current working directory. **>> ImfsContext resolves everything to absolute paths anyway.**
+- [ ] You can use relative paths (relative to the current working directory) as well, including the special “..” path that refers to the parent directory. **>> some relative operations just work.**
+- [ ]When creating or moving items to a new path, you can choose to automatically create any intermediate directories on the path that don’t exist yet. **>> mkdirs does this, but it's not generalized.**
 
 ### [x] Walk a subtree
+***>> Traversal is supported explicitly via NIO's [`walk() and walkTree()`](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#walk-java.nio.file.Path-java.nio.file.FileVisitOption...-).***
 
 - [x] You can walk through all the recursive contents of a directory, invoking a passed-in function on each child directory/file.
 - [x] While walking, the passed-in function can arbitrarily choose not to recurse into certain subdirectories.
 - [x] Use this to implement some recursive operations. For example, finding the first file in a subtree whose name matches a regex.
-      **-- see [testImportFiles](src/test/java/com/imfs/ImfsContextTest.java)**
+      **>> see [testImportFiles](src/test/java/com/imfs/ImfsContextTest.java)**
 
-NOTE: Traversal is supported explicitly via NIO's [`walk() and walkTree()`](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#walk-java.nio.file.Path-java.nio.file.FileVisitOption...-).
 
-# Verifying the requirements
+### [ ] Symlinks and hardlinks
 
-1. **Try Out Codespaces: Java**
+***>> Skipping this one.*** Symlinks are probably easy since they are basically a special file. 
+Hardlinks would be more awkward.
 
-   - Follow these steps to open this repo in a Codespace:
-   - Click the **Code** drop-down menu.
-   - Click on the **Codespaces** tab.
-   - Click **Create codespace on main**.
-   - For more info, check out the [GitHub documentation](https://docs.github.com/en/free-pro-team@latest/github/developing-online-with-codespaces/creating-a-codespace#creating-a-codespace).
-   - Or just treat it like a Java repo.
+- [ ] Add symlinks. Symlinks contain a path referencing the file or directory they represent. Reading a symlink’s file/directory contents should have the same results as reading the contents of the item it references instead.
+- [ ] Add hardlinks. Hardlinks of a file/directory all point to the same file contents or directory children even if the original file/directory moves to a new location.
 
-2. **Run the Tests:**
+### [ ] Permissions and multiple users
 
-   - The core functional scenarios are covered here: `src/test/java/com/imfs/ImfsContextTest.java`.
-   - Open the file and use the right-click `Run Test` options.
-   - Click the `Debug Test` in the Code Lens above the function and watch it hit any breakpoints.
+***>> Skipping this one.*** Just ran out of time.
 
-3. **Build, Run, and Debug:**
+- [ ] You can set read/write permissions on files and directories
+- [ ] There are multiple users, who can have different permissions. You can switch
+between them (but switching doesn’t need to require permissions, it’s just for
+testing.)
+- [ ] Users can be in groups, and the groups have different permissions which users
+inherit.
 
-   - Open `src/main/java/com/mycompany/app/App.java`.
-   - Add a breakpoint.
-   - Press <kbd>F5</kbd> to launch the app in the container.
-   - Once the breakpoint is hit, try hovering over variables, examining locals, and more.
+### [x] Stream for file contents
+
+- [x] Reading a file can be done in chunks or as a stream, not just all contents at once. ***>> this is the way.***
+- [x] You can also write to a file in chunks or a stream. ***>> this is the way.***
+- [x] You can have one writer and multiple readers of a file at the same time. ***>> works for multiple readers, but simultaneous read/write is undefined.***
+- [x] You can continue reading/writing from a file even if it gets moved to a different
+  path before you’re done. ***>> works for read, but write stores in the old location (no data loss).***
+- [ ] You can read and write starting from any part of a file and also jump to a different
+  part (random access) ***>> works for read, not for write***
+
+## Risks and open issues
+
+- [ ] **The compiler compliance specified is 11 but a JRE 17 is used**. Codespaces template
+specified JavaSE-11, but the default OpenJDK is on 17. Defer doing upgrade for now.
+- [ ] **TODO / UnsupportedOperationException** - There are over 40 unimplemented stubs. 
+These are presumably required in order fulfill all the requirements of integration with NIO Files API. 
+Although the documentation indicates that not all of them are expected for every implementation.
+- [ ] **Missing performance scenarios** - What are we optimizing for? Performance is about tradeoffs so making some decisions would depend
+ on prioritizing use case scenarios. 
+  - [ ] **Root enumerations are expensive** because they scan the full TreeMap and do a filter. 
+  Might need a cache or new data structure if this is a problem.
+  - [ ] **Files are stored in contiguous byte arrays.** Humongous files (>16MB) could cause weird fragmentation issues,
+   especially since these allocations are likely to be long lived. Could use fancier allocation scheme like chains of blocks. 
+- [ ] **How important is concurrency?** For simple scenarios wrapping TreeMap with Collections.synchronizedSortedMap might be enough.
+Switching to an in-memory DB like H2 or SQLite is also an option.
 
 # Architecture
 

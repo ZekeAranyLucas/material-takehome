@@ -8,8 +8,8 @@ import java.nio.channels.WritableByteChannel;
 
 public class ImfsWritableByteChannel implements WritableByteChannel {
 
-    private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    private final WritableByteChannel channel = Channels.newChannel(baos);
+    private final ByteArrayOutputStream output = new ByteArrayOutputStream();
+    private final WritableByteChannel channel = Channels.newChannel(output);
     private boolean isOpen = true;
     private final ImfsPath path;
 
@@ -20,8 +20,8 @@ public class ImfsWritableByteChannel implements WritableByteChannel {
     @Override
     public void close() throws IOException {
         channel.close();
-        baos.close();
-        var bytes = baos.toByteArray();
+        output.close();
+        var bytes = output.toByteArray();
         var fileSystem = (ImfsFileSystem) path.getFileSystem();
         fileSystem.putBlob(path.getMaterializedPath(), bytes);
         this.isOpen = false;
