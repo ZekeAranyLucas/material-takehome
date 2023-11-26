@@ -1,12 +1,12 @@
 package com.imfs;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
+import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Set;
@@ -116,37 +116,22 @@ public class ImfsFileSystem extends FileSystem {
         return key;
     }
 
-    public ImfsChildren streamAllPaths() {
+    public ImfsDirectoryStream streamAllPaths(Filter<? super Path> filter) {
         System.out.println("--- streamAllPaths: records.size() = " + records.size());
-        return ImfsChildren.builder()
-                .size(records.size())
-                .version(0)
-                .stream(records.keySet().stream()
-                        .map(entry -> {
-                            return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
-                        }))
-                .build();
-
+        return new ImfsDirectoryStream(this, "", records.keySet().stream(), records.size(), filter);
     }
 
-    public ImfsChildren streamChildren(String materializedPath) {
+    public ImfsDirectoryStream streamChildren(String materializedPath, Filter<? super Path> filter) {
         if (materializedPath.length() == 0) {
-            return streamAllPaths();
+            return streamAllPaths(filter);
         }
 
         var from = materializedPath + "/";
         var to = materializedPath + "0";
         var sub = records.subMap(from, to);
         System.out.println("--- streamChildren: sub.size() = " + sub.size());
+        return new ImfsDirectoryStream(this, materializedPath, sub.keySet().stream(), sub.size(), filter);
 
-        return ImfsChildren.builder()
-                .size(sub.size())
-                .version(0)
-                .stream(sub.keySet().stream()
-                        .map(entry -> {
-                            return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
-                        }))
-                .build();
     }
 
     public boolean contains(String materializedPath) {

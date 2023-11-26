@@ -170,7 +170,6 @@ public class ImfsProvider extends FileSystemProvider {
 
             return new ByteArraySeekableByteChannel(record.getBytes());
         }
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("only READ and WRITE are implemented in 'newByteChannel'");
     }
 
@@ -178,10 +177,7 @@ public class ImfsProvider extends FileSystemProvider {
     public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
         var imfsPath = checkPath(path);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
-        var children = fileSystem.streamChildren(imfsPath.getMaterializedPath());
-
-        // instrument the stream to close the underlying directory stream
-        return new ImfsDirectoryStream(imfsPath, children, filter);
+        return fileSystem.streamChildren(imfsPath.getMaterializedPath(), filter);
     }
 
     @Override

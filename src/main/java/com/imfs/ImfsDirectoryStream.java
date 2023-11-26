@@ -1,23 +1,32 @@
 package com.imfs;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class ImfsDirectoryStream implements DirectoryStream<Path> {
-    private final ImfsPath parent;
-    private final ImfsChildren children;
-    private final Stream<Path> stream;
+    private ImfsFileSystem fileSystem;
+    private String parent;
+    private int version = 0;
+    private int inputSize;
+    private Stream<Path> stream;
     private int total = 0;
     private int kids = 0;
     long startTime = System.nanoTime();
+    private final int offset;
 
-    public ImfsDirectoryStream(ImfsPath parent, ImfsChildren children, Filter<? super Path> filter) {
-        this.parent = parent;
-        this.children = children;
-        this.stream = children.getStream().filter(this::isChild)
+    public ImfsDirectoryStream(ImfsFileSystem fileSystem, String materializedPath,
+            Stream<String> input, int inputSize, Filter<? super Path> filter) {
+        this.fileSystem = fileSystem;
+        this.parent = materializedPath;
+        this.inputSize = inputSize;
+        this.offset = parent.length() + 1;
+
+        this.stream = input.filter(this::isChild)
+                .map(this::toPath)
                 .filter(each -> {
                     try {
                         return filter == null || filter.accept(each);
@@ -25,12 +34,16 @@ public class ImfsDirectoryStream implements DirectoryStream<Path> {
                         throw new RuntimeException(ex);
                     }
                 });
-
     }
 
-    private boolean isChild(Path each) {
+    private Path toPath(String entry) {
+        return new ImfsPath(fileSystem, URI.create("imfs://" + fileSystem.getKey() + "/" + entry));
+    }
+
+    private boolean isChild(String each) {
         total++;
-        var result = each.getParent().equals(parent);
+        // paths with no extra slashes are children
+        var result = each.indexOf("/", offset) == -1;
         kids += result ? 1 : 0;
         return result;
     }
@@ -49,9 +62,9 @@ public class ImfsDirectoryStream implements DirectoryStream<Path> {
         long elapsed = (endTime - startTime) / 1_000_000;
 
         System.out.println("ImfsDirectoryStream"
-                + ": path=" + parent.toUri().toString()
-                + ", version=" + children.getVersion()
-                + ", size=" + children.getSize()
+                + ": path=" + parent
+                + ", version=" + version
+                + ", size=" + inputSize
                 + ", total=" + total
                 + ", kids=" + kids
                 + ", elapsed=" + elapsed);
