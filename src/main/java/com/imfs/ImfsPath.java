@@ -169,6 +169,11 @@ public class ImfsPath implements Path {
                 && this.uri.equals(((ImfsPath) other).uri);
     }
 
+    @Override
+    public String toString() {
+        return this.uri.toString();
+    }
+
     public String getMaterializedPath() {
         return materializedPath;
     }

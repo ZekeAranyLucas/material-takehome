@@ -12,6 +12,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The ImfsContext class represents a context for interacting with the Imfs file
@@ -150,12 +151,26 @@ public class ImfsContext {
         return Files.readAllLines(file);
     }
 
+    /**
+     * Moves a file or directory from the source path to the destination path.
+     *
+     * @param src the source path of the file or directory to be moved
+     * @param dst the destination path where the file or directory will be moved to
+     * @throws IOException if an I/O error occurs during the move operation
+     */
     public void mv(String src, String dst) throws IOException {
         Path srcPath = this.path.resolve(src);
         Path dstPath = this.path.resolve(dst);
         Files.move(srcPath, dstPath);
     }
 
+    /**
+     * Copies a file object from the source path to the destination path.
+     *
+     * @param src the source path of the file to be copied
+     * @param dst the destination path where the file will be copied to
+     * @throws IOException if an I/O error occurs during the file copy operation
+     */
     public void cp(String src, String dst) throws IOException {
         Path srcPath = this.path.resolve(src);
         Path dstPath = this.path.resolve(dst);
@@ -170,6 +185,7 @@ public class ImfsContext {
     /**
      * Imports tree of files from a source directory to a destination directory.
      * Used to import files from the host file system into the Imfs file system.
+     * Fails if the destination directores or files already exist.
      * 
      * @param src the path of the source directory
      * @param dst the path of the destination directory
@@ -181,9 +197,78 @@ public class ImfsContext {
             Path dstPath = this.path.resolve(dst + "/" + root.relativize(srcPath).toString());
             try {
                 Files.copy(srcPath, dstPath);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         });
+    }
+
+    /**
+     * Recursively merges the contents of a source directory into a destination
+     * directory.
+     * If a file with the same name already exists in the destination directory, a
+     * copy of the file is made instead of overwriting it.
+     * If a directory with the same name already exists in the destination
+     * directory, the contents of the source directory are merged into it.
+     *
+     * @param src The path of the source directory.
+     * @param dst The path of the destination directory.
+     * @throws IOException If an I/O error occurs during the merge process.
+     */
+    public void mergeDirs(String src, String dst) throws IOException {
+        Path root = Paths.get(src);
+        Files.walk(root).forEach(srcPath -> {
+            Path dstPath = this.path.resolve(dst + "/" + root.relativize(srcPath).toString());
+            try {
+                if (Files.isRegularFile(dstPath)) {
+                    // don't clobber or fail for file name collisions.
+                    // instead just make a copy of the file
+                    dstPath = copyOfFileName(dstPath);
+                }
+                // but if it's a directory, we can just reuse it
+                if (!Files.isDirectory(dstPath)) {
+                    Files.copy(srcPath, dstPath);
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+    }
+
+    private Path copyOfFileName(Path dstPath) {
+        int count = 1;
+        String pathName = dstPath.toUri().getPath();
+        int lastSlashIndex = pathName.lastIndexOf("/");
+        var fileName = pathName.substring(lastSlashIndex + 1);
+        // make sure we don't overwrite an existing file
+        while (Files.isRegularFile(dstPath) && count < 100) {
+            dstPath = dstPath.getParent().resolve("Copy-" + count + "-of-" + fileName);
+        }
+        return dstPath;
+    }
+
+    /**
+     * Recursively searches for files in the specified root directory and its
+     * subdirectories,
+     * and filters the lines of each file based on the given pattern.
+     *
+     * @param root    the root directory to start the search from
+     * @param pattern the regular expression pattern to match against each line of
+     *                the files
+     * @return a stream of lines that match the given pattern
+     * @throws IOException if an I/O error occurs while reading the files
+     */
+    public Stream<String> grepTree(String root, String pattern) throws IOException {
+        Path rootPath = this.path.resolve(root);
+        return Files.walk(rootPath)
+                .filter(Files::isRegularFile)
+                .flatMap(path -> {
+                    try {
+                        return Files.lines(path);
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                })
+                .filter(line -> line.matches(pattern));
     }
 }

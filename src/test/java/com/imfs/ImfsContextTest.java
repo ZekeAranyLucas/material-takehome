@@ -2,7 +2,9 @@ package com.imfs;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
@@ -328,5 +330,52 @@ public class ImfsContextTest {
                 "/src/test/java/com/imfs/ImfsProviderTest.java",
                 "/src/test/java/com/imfs/app/AppTest.java" }, tests.toArray());
 
+    }
+
+    @Test
+    public void testImportFilesCollision() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var kids = context.ls();
+
+        // use working dir to copy the source code files into memory
+        context.importFiles("src", "src");
+
+        kids = context.ls();
+        assertArrayEquals(new String[] { "Spanish", "history", "math", "src" }, kids.toArray());
+
+        assertThrows(RuntimeException.class, () -> context.importFiles("src", "src"));
+    }
+
+    @Test
+    public void testMergeDirs() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+        var original = Paths.get(URI.create("imfs://ImfsContextTest/src/test/java/com/imfs/ImfsContextTest.java"));
+        var copy = Paths
+                .get(URI.create("imfs://ImfsContextTest/src/test/java/com/imfs/Copy-1-of-ImfsContextTest.java"));
+
+        assertFalse(Files.isRegularFile(original));
+        assertFalse(Files.isRegularFile(copy));
+
+        context.importFiles("src", "src");
+
+        assertTrue(Files.isRegularFile(original));
+        assertFalse(Files.isRegularFile(copy));
+
+        context.mergeDirs("src", "src");
+
+        assertTrue(Files.isRegularFile(original));
+        assertTrue(Files.isRegularFile(copy));
+    }
+
+    @Test
+    public void testGrepTree() throws IOException {
+        var context = new ImfsContext("imfs://ImfsContextTest/");
+
+        context.importFiles("src", "src");
+
+        var results = context.grepTree("src", ".*testGrepTree.*").collect(Collectors.toList());
+
+        assertEquals("    public void testGrepTree() throws IOException {", results.get(0));
+        assertEquals(3, results.size());
     }
 }
