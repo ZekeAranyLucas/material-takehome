@@ -157,7 +157,9 @@ Copied from the PDF.
 - [ ] **Missing performance scenarios** - What are we optimizing for? Performance is about tradeoffs so making some
       decisions would depend on prioritizing use case scenarios.
   - [ ] **Root enumerations are expensive** because they scan the full TreeMap and do a filter.
-        Might need a cache or new data structure if this is a problem.
+        Basic instrumentation of ImfsDirectoryStreeam shows that something will need to be done.
+        A tale of two scans: `total=15, kids=1, elapsed=39` vs `total=3, kids=1, elapsed=2`.
+        Either a cache or a new data structure to support enumerations.
   - [ ] **Files are stored in contiguous byte arrays.** Humongous files (>16MB) could cause weird fragmentation issues,
         especially since these allocations are likely to be long-lived. Could use a fancier allocation scheme like a chain of blocks.
 - [ ] **How important is concurrency?** For simple scenarios wrapping TreeMap with Collections.synchronizedSortedMap might be enough.

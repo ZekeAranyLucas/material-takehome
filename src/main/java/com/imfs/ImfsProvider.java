@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Iterator;
 
 public class ImfsProvider extends FileSystemProvider {
     static final String IMFS_SCHEME = "imfs";
@@ -155,48 +154,34 @@ public class ImfsProvider extends FileSystemProvider {
             throws IOException {
         var imfsPath = checkPath(arg0);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
-        var kid = imfsPath.getMaterializedPath();
-        var exists = fileSystem.contains(kid);
+        var record = fileSystem.getRecord(imfsPath.getMaterializedPath());
         if (options.contains(StandardOpenOption.WRITE)) {
-            if (exists && options.contains(StandardOpenOption.CREATE_NEW)) {
+            if (record != null && options.contains(StandardOpenOption.CREATE_NEW)) {
                 throw new FileAlreadyExistsException("File at path:" + imfsPath.toUri() + " already exists");
             }
-            fileSystem.putBlob(kid, new byte[] {});
+            // TODO: check if clobbering existing files is always correct
+            fileSystem.putBlob(imfsPath.getMaterializedPath(), new byte[] {});
             var result = new ImfsWritableByteChannel(imfsPath);
             return new ImfsSeekableByteChannel(result);
         } else if (options.contains(StandardOpenOption.READ) || options.isEmpty()) {
-            return new ByteArraySeekableByteChannel(fileSystem.getBlob(kid));
+            if (record == null) {
+                throw new FileNotFoundException("No such file or directory: " + imfsPath.toUri().toString());
+            }
+
+            return new ByteArraySeekableByteChannel(record.getBytes());
         }
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("only READ and WRITE are implemented in 'newByteChannel'");
     }
 
     @Override
-    public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> arg1) throws IOException {
+    public DirectoryStream<Path> newDirectoryStream(Path path, Filter<? super Path> filter) throws IOException {
         var imfsPath = checkPath(path);
         var fileSystem = (ImfsFileSystem) imfsPath.getFileSystem();
-        var stream = fileSystem.streamChildren(imfsPath.getMaterializedPath())
-                .filter(each -> each.getParent().equals(path))
-                .filter(arg0 -> {
-                    try {
-                        return arg1 == null || arg1.accept(arg0);
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                        return false;
-                    }
-                });
-        return new DirectoryStream<Path>() {
-            @Override
-            public Iterator<Path> iterator() {
-                return stream.iterator();
-            }
+        var children = fileSystem.streamChildren(imfsPath.getMaterializedPath());
 
-            @Override
-            public void close() throws IOException {
-                stream.close();
-            }
-        };
+        // instrument the stream to close the underlying directory stream
+        return new ImfsDirectoryStream(imfsPath, children, filter);
     }
 
     @Override

@@ -11,7 +11,6 @@ import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import java.util.Arrays;
 import java.util.List;
@@ -117,28 +116,37 @@ public class ImfsFileSystem extends FileSystem {
         return key;
     }
 
-    public Stream<Path> streamAllPaths() {
-        // System.out.println("--- streamAllPaths: start");
-        return records.keySet().stream()
-                .map(entry -> {
-                    // System.out.println("enum: " + entry);
-                    return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
-                });
+    public ImfsChildren streamAllPaths() {
+        System.out.println("--- streamAllPaths: records.size() = " + records.size());
+        return ImfsChildren.builder()
+                .size(records.size())
+                .version(0)
+                .stream(records.keySet().stream()
+                        .map(entry -> {
+                            return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
+                        }))
+                .build();
+
     }
 
-    public Stream<Path> streamChildren(String materializedPath) {
+    public ImfsChildren streamChildren(String materializedPath) {
         if (materializedPath.length() == 0) {
             return streamAllPaths();
         }
-        // System.out.println("--- streamChildren: start");
+
         var from = materializedPath + "/";
         var to = materializedPath + "0";
         var sub = records.subMap(from, to);
-        return sub.keySet().stream()
-                .map(entry -> {
-                    // System.out.println("enum: " + entry);
-                    return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
-                });
+        System.out.println("--- streamChildren: sub.size() = " + sub.size());
+
+        return ImfsChildren.builder()
+                .size(sub.size())
+                .version(0)
+                .stream(sub.keySet().stream()
+                        .map(entry -> {
+                            return new ImfsPath(this, URI.create("imfs://" + key + "/" + entry));
+                        }))
+                .build();
     }
 
     public boolean contains(String materializedPath) {
