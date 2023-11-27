@@ -11,9 +11,11 @@ import lombok.NonNull;
 public class ImfsRecord {
     @NonNull
     private final String materializedPath;
-    private final byte[] bytes;
+    private final boolean file;
+    private final int blobId; // Used only by H2
+    private final byte[] bytes; // Use only by TreeMap
 
     public static ImfsRecord ofDir(String materializedPath) {
-        return builder().materializedPath(materializedPath).build();
+        return builder().materializedPath(materializedPath).file(false).build();
     }
 }

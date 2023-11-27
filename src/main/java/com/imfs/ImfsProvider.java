@@ -66,6 +66,9 @@ public class ImfsProvider extends FileSystemProvider {
         if (srcRecord == null) {
             throw new NoSuchFileException("No such file or directory: " + src.toUri().toString());
         }
+
+        // copy reuses the original file data, but changing the path
+        // results in two records sharing the data.
         var dstRecord = srcRecord.toBuilder()
                 .materializedPath(dstKid)
                 .build();
@@ -92,7 +95,7 @@ public class ImfsProvider extends FileSystemProvider {
         if (record == null) {
             throw new NoSuchFileException("No such file or directory: " + imfsPath.toUri().toString());
         }
-        if (record.getBytes() == null) {
+        if (!record.isFile()) {
             try (DirectoryStream<Path> dirStream = newDirectoryStream(path, null)) {
                 if (dirStream.iterator().hasNext()) {
                     throw new DirectoryNotEmptyException("Directory not empty: " + imfsPath.toUri().toString());
@@ -117,7 +120,7 @@ public class ImfsProvider extends FileSystemProvider {
     @Override
     public FileSystem getFileSystem(URI uri) {
         return cache.computeIfAbsent(uri.getHost(), (key) -> {
-            return new ImfsFileSystem(this, key);
+            return new ImfsH2FileSystem(this, key);
         });
     }
 
@@ -168,7 +171,7 @@ public class ImfsProvider extends FileSystemProvider {
                 throw new FileNotFoundException("No such file or directory: " + imfsPath.toUri().toString());
             }
 
-            return new ByteArraySeekableByteChannel(record.getBytes());
+            return new ByteArraySeekableByteChannel(fileSystem.getBlob(imfsPath.getMaterializedPath()));
         }
         throw new UnsupportedOperationException("only READ and WRITE are implemented in 'newByteChannel'");
     }

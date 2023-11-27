@@ -381,54 +381,97 @@ public class ImfsContextTest {
 
     @Test
     public void testWalkSpeed() throws IOException {
+        System.out.println("testWalkSpeed given");
         var context = new ImfsContext("imfs://ImfsContextTest/");
 
+        long startTime = System.nanoTime();
         context.importFiles("src", "src");
 
+        long endTime = System.nanoTime();
+        long elapsed = (endTime - startTime) / 1_000_000;
+        System.out.println("testWalkSpeed importFiles elapsed=" + elapsed + "ms");
+
+        System.out.println("testWalkSpeed when");
+        startTime = System.nanoTime();
         var results = Files.walk(context.getPath())
                 .filter(Files::isRegularFile)
                 .collect(Collectors.toList());
 
-        assertEquals(15, results.size());
+        endTime = System.nanoTime();
+        elapsed = (endTime - startTime) / 1_000_000;
+        System.out.println("testWalkSpeed walk elapsed=" + elapsed + "ms");
+        System.out.println("testWalkSpeed then");
+        assertEquals(17, results.size());
     }
 
-    // Debug console from testWalkSpeed() while using Paths to do parenting
+    // Debug console from testWalkSpeed() while using H2
     //
-    // ImfsDirectoryStream:
-    // path=imfs://ImfsContextTest/src/main/resources/META-INF/services, version=0,
-    // size=1, total=1, kids=1, elapsed=0
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/main/resources/META-INF,
-    // version=0, size=2, total=2, kids=1, elapsed=0
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/main/resources,
-    // version=0, size=3, total=3, kids=1, elapsed=0
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/main, version=0,
-    // size=20, total=20, kids=2, elapsed=5
-    // ...
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/test/java/com/imfs/app,
-    // version=0, size=1, total=1, kids=1, elapsed=0
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/test/java/com/imfs,
-    // version=0, size=4, total=4, kids=3, elapsed=0
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/test/java/com,
-    // version=0, size=5, total=5, kids=1, elapsed=1
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/test/java, version=0,
-    // size=6, total=6, kids=1, elapsed=1
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src/test, version=0, size=7,
-    // total=7, kids=1, elapsed=2
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/src, version=0, size=29,
-    // total=29, kids=2, elapsed=9
-    // ImfsDirectoryStream: path=imfs://ImfsContextTest/, version=0, size=33,
-    // total=33, kids=4, elapsed=32
-    //
-    // Debug console from testWalkSpeed() while using indexOf to do parenting
+    // testWalkSpeed given
+    // testWalkSpeed importFiles elapsed=92ms
+    // testWalkSpeed when
+    // ImfsDirectoryStream: path=Spanish, version=0, size=-1, total=0, kids=0,
+    // elapsed=0
+    // ImfsDirectoryStream: path=history, version=0, size=-1, total=0, kids=0,
+    // elapsed=0
+    // ImfsDirectoryStream: path=math, version=0, size=-1, total=0, kids=0,
+    // elapsed=0
+    // ImfsDirectoryStream: path=src/main/java/com/imfs/app, version=0, size=-1,
+    // total=1, kids=1, elapsed=0
+    // ImfsDirectoryStream: path=src/main/java/com/imfs, version=0, size=-1,
+    // total=13, kids=13, elapsed=8
+    // ImfsDirectoryStream: path=src/main/java/com, version=0, size=-1, total=1,
+    // kids=1, elapsed=10
+    // ImfsDirectoryStream: path=src/main/java, version=0, size=-1, total=1, kids=1,
+    // elapsed=11
+    // ImfsDirectoryStream: path=src/main/resources/META-INF/services, version=0,
+    // size=-1, total=1, kids=1, elapsed=0
+    // ImfsDirectoryStream: path=src/main/resources/META-INF, version=0, size=-1,
+    // total=1, kids=1, elapsed=1
+    // ImfsDirectoryStream: path=src/main/resources, version=0, size=-1, total=1,
+    // kids=1, elapsed=2
+    // ImfsDirectoryStream: path=src/main, version=0, size=-1, total=2, kids=2,
+    // elapsed=16
+    // ImfsDirectoryStream: path=src/test/java/com/imfs/app, version=0, size=-1,
+    // total=1, kids=1, elapsed=1
+    // ImfsDirectoryStream: path=src/test/java/com/imfs, version=0, size=-1,
+    // total=3, kids=3, elapsed=3
+    // ImfsDirectoryStream: path=src/test/java/com, version=0, size=-1, total=1,
+    // kids=1, elapsed=4
+    // ImfsDirectoryStream: path=src/test/java, version=0, size=-1, total=1, kids=1,
+    // elapsed=6
+    // ImfsDirectoryStream: path=src/test, version=0, size=-1, total=1, kids=1,
+    // elapsed=7
+    // ImfsDirectoryStream: path=src, version=0, size=-1, total=2, kids=2,
+    // elapsed=26
+    // ImfsDirectoryStream: path=, version=0, size=-1, total=4, kids=4, elapsed=48
+    // testWalkSpeed walk elapsed=55ms
+    // testWalkSpeed then
+
+    // Debug console from testWalkSpeed() while using TreeMap
+    // testWalkSpeed given
+    // testWalkSpeed importFiles elapsed=37ms
+    // testWalkSpeed when
+    // ImfsDirectoryStream: path=Spanish, version=0, size=0, total=0, kids=0,
+    // elapsed=0
+    // ImfsDirectoryStream: path=history, version=0, size=0, total=0, kids=0,
+    // elapsed=0
+    // ImfsDirectoryStream: path=math, version=0, size=0, total=0, kids=0, elapsed=0
+    // ImfsDirectoryStream: path=src/main/java/com/imfs/app, version=0, size=1,
+    // total=1, kids=1, elapsed=0
+    // ImfsDirectoryStream: path=src/main/java/com/imfs, version=0, size=14,
+    // total=14, kids=13, elapsed=0
+    // ImfsDirectoryStream: path=src/main/java/com, version=0, size=15, total=15,
+    // kids=1, elapsed=1
+    // ImfsDirectoryStream: path=src/main/java, version=0, size=16, total=16,
+    // kids=1, elapsed=1
     // ImfsDirectoryStream: path=src/main/resources/META-INF/services, version=0,
     // size=1, total=1, kids=1, elapsed=0
     // ImfsDirectoryStream: path=src/main/resources/META-INF, version=0, size=2,
     // total=2, kids=1, elapsed=0
     // ImfsDirectoryStream: path=src/main/resources, version=0, size=3, total=3,
     // kids=1, elapsed=0
-    // ImfsDirectoryStream: path=src/main, version=0, size=19, total=19, kids=2,
-    // elapsed=3
-    // ...
+    // ImfsDirectoryStream: path=src/main, version=0, size=21, total=21, kids=2,
+    // elapsed=2
     // ImfsDirectoryStream: path=src/test/java/com/imfs/app, version=0, size=1,
     // total=1, kids=1, elapsed=0
     // ImfsDirectoryStream: path=src/test/java/com/imfs, version=0, size=4, total=4,
@@ -438,8 +481,10 @@ public class ImfsContextTest {
     // ImfsDirectoryStream: path=src/test/java, version=0, size=6, total=6, kids=1,
     // elapsed=0
     // ImfsDirectoryStream: path=src/test, version=0, size=7, total=7, kids=1,
-    // elapsed=0
-    // ImfsDirectoryStream: path=src, version=0, size=28, total=28, kids=2,
-    // elapsed=4
-    // ImfsDirectoryStream: path=, version=0, size=32, total=32, kids=4, elapsed=25
+    // elapsed=1
+    // ImfsDirectoryStream: path=src, version=0, size=30, total=30, kids=2,
+    // elapsed=3
+    // ImfsDirectoryStream: path=, version=0, size=34, total=34, kids=4, elapsed=26
+    // testWalkSpeed walk elapsed=28ms
+    // testWalkSpeed then
 }

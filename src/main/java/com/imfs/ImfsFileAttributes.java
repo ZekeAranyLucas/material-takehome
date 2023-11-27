@@ -4,20 +4,19 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 
 import lombok.Builder;
-import lombok.Getter;
 
-@Getter
 @Builder
 public class ImfsFileAttributes implements BasicFileAttributes {
     private String materializedPath;
     private boolean hasBytes;
     private long size;
 
+    // TODO: this is a hack to get the size of the file
     public static ImfsFileAttributes of(ImfsRecord record) {
         return ImfsFileAttributes.builder()
                 .materializedPath(record.getMaterializedPath())
-                .hasBytes(record.getBytes() != null)
-                .size(record.getBytes() != null ? record.getBytes().length : 0)
+                .hasBytes(record.isFile())
+                .size(record.isFile() ? 100 : 0)
                 .build();
     }
 

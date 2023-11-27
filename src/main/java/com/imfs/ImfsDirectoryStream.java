@@ -3,12 +3,13 @@ package com.imfs;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class ImfsDirectoryStream implements DirectoryStream<Path> {
-    private ImfsFileSystem fileSystem;
+    private FileSystem fileSystem;
     private String parent;
     private int version = 0;
     private int inputSize;
@@ -17,10 +18,12 @@ public class ImfsDirectoryStream implements DirectoryStream<Path> {
     private int kids = 0;
     long startTime = System.nanoTime();
     private final int offset;
+    private String fileSystemKey;
 
-    public ImfsDirectoryStream(ImfsFileSystem fileSystem, String materializedPath,
+    public ImfsDirectoryStream(FileSystem fileSystem, String fileSystemKey, String materializedPath,
             Stream<String> input, int inputSize, Filter<? super Path> filter) {
         this.fileSystem = fileSystem;
+        this.fileSystemKey = fileSystemKey;
         this.parent = materializedPath;
         this.inputSize = inputSize;
         this.offset = parent.length() + 1;
@@ -37,7 +40,7 @@ public class ImfsDirectoryStream implements DirectoryStream<Path> {
     }
 
     private Path toPath(String entry) {
-        return new ImfsPath(fileSystem, URI.create("imfs://" + fileSystem.getKey() + "/" + entry));
+        return new ImfsPath(fileSystem, URI.create("imfs://" + fileSystemKey + "/" + entry));
     }
 
     private boolean isChild(String each) {
