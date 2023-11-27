@@ -11,7 +11,9 @@
 ### Proposal
 
 Build the project using Codespaces and Java to optimize for accessibility by reviewers.
-Since we are using Java, integrating with NIO will get us the richest possible implementation.
+Since we are using Java, integrating with NIO's FileSystemProvider will give our clients the richest possible implementation.
+It will also enable using [Java's Files API](https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html) and transparently interop with other integrated stores, 
+including the OS default file system.
 See [Decision Records](#decision-records) for details.
 
 ### Results
